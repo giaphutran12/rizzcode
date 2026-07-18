@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowRight, Code, Sparkle } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 import { BaselineExperience } from "./components/BaselineExperience";
 import { TasteExperience } from "./components/TasteExperience";
 import { CurriculumView } from "./components/product/CurriculumView";
@@ -62,7 +65,8 @@ function DesignPicker() {
 }
 
 function Routes() {
-  const route = window.location.pathname.replace(/\/+$/, "") || "/";
+  const pathname = usePathname();
+  const route = pathname.replace(/\/+$/, "") || "/";
 
   if (route === "/") return <TasteExperience />;
   if (route === "/onboarding") return <OnboardingView />;

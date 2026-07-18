@@ -61,10 +61,13 @@ To use the existing ignored environment file in the original checkout without
 copying it:
 
 ```bash
-RIZZCODE_ENV_FILE=/Users/edwardtran/side-projects/leetcode-for-dating/.env.local npm run dev
+set -a
+source /Users/edwardtran/side-projects/leetcode-for-dating/.env.local
+set +a
+npm run dev
 ```
 
-The server loads that file for execution only. It never prints or sends the key
+The shell loads that file for the process only. It never prints or sends the key
 to the browser. Without a server-side key, persona turns use labeled authored
 fallbacks, while official judgment remains unscored and offers `Retry
 judgment`.
@@ -94,10 +97,14 @@ It prints only pass or failure metadata, never the credential or transcript.
 
 ## Runtime architecture
 
-- `server/index.ts` serves the Vite app and owns `POST /api/persona/prepare`,
-  `POST /api/persona`, and `POST /api/judge`.
+- Next.js 16 App Router serves the product through
+  `src/app/[[...slug]]/page.tsx`.
+- `src/app/api/[...path]/route.ts` owns `POST /api/persona/prepare`,
+  `POST /api/persona`, and `POST /api/judge` in one Node route module.
 - `server/persona/` owns prompt-safe adaptive generation, draft preparation,
   idempotency, authored fallback, and the bounded canonical conversation store.
+- `server/runtime.ts` selects production or non-production test providers
+  without exposing environment variables to the client.
 - `server/judge/provider.ts` is the only production provider path.
 - `server/judge/service.ts` requires the server-owned conversation, runs hard
   gates, invokes the separate judge provider, validates evidence and outcomes,
@@ -125,6 +132,9 @@ The MVP stores no secrets and uses only:
 
 At most 100 attempts are retained. A malformed record resets only itself. If
 storage is unavailable, practice continues in memory with a visible warning.
+The canonical active conversation store remains process-local for this
+comparison build. A durable multi-instance deployment still needs a shared
+store adapter.
 
 ## Deliberately outside this MVP
 

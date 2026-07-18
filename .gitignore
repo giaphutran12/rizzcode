@@ -1,4 +1,6 @@
 node_modules/
+.next/
+.vercel/
 dist/
 coverage/
 playwright-report/

@@ -1,7 +1,7 @@
 # RizzCode MVP implementation notes
 
-This document describes the GPT comparison build on
-`codex/rizzcode-mvp-gpt`. The canonical behavior remains
+This document describes the Next.js migration of the GPT comparison build on
+`codex/rizzcode-nextjs`. The canonical behavior remains
 [RIZZCODE_MASTER_PLAN.md](RIZZCODE_MASTER_PLAN.md).
 
 ## Persona and judge integrity
@@ -112,7 +112,7 @@ acceptance, XP anti-farming, open scenario access, corrupt storage, storage
 failure, mode-specific UI, onboarding skip, provider failure, malformed output,
 and the acceptance anchors.
 
-Playwright runs the full UI against the real Express routes with mock providers
-selected only in a non-production server process. Production ignores
+Playwright runs the full UI against the real Next.js route handler with mock
+providers selected only in a non-production server process. Production ignores
 `RIZZCODE_MOCK_PERSONA` and `RIZZCODE_MOCK_JUDGE`, so both production paths
 remain configured LLM providers.
