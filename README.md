@@ -74,6 +74,11 @@ real key.
 - The leaderboard is a local-only demo: your local practice XP merged with
   seeded fictional players, explicitly labeled `Demo`. There is no real
   global ranking.
+- `/api/judge` is served by Vite middleware (`server/judgeApiPlugin.ts`) in
+  `dev` and `preview`. Deploying `dist/` to static hosting alone would leave
+  every attempt in a retryable `judge_unavailable` state — port the route to
+  a serverless function (same handler, `src/server/judge/route.ts`) before
+  any real deploy.
 - `/control` and `/compare` are historical prototypes from the design
   comparison that shaped the current experience — not part of the supported
   product surface.
