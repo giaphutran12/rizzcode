@@ -7,7 +7,16 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { type Plugin, loadEnv } from "vite";
 import { handleJudgeRequest, type JudgeDeps } from "../src/server/judge/route";
+import { mockCallModel } from "../src/server/judge/mockModel";
 import type { JudgeApiResponse } from "../src/domain/types";
+
+// TEST-ONLY escape hatch: when RIZZCODE_JUDGE_MOCK=1 is set in the SERVER process
+// env (never by default — set only by `npm run test:e2e`'s webServer command), the
+// judge model call is faked at the deps.callModel seam so Playwright exercises the
+// full route/gates/validation/replay pipeline without ever calling the real
+// provider. This is read from process.env, not loadEnv, so it can never leak in
+// from a committed .env file and is impossible to trip in normal `npm run dev`.
+const JUDGE_MOCK = process.env.RIZZCODE_JUDGE_MOCK === "1";
 
 // Bound the request body so an oversized payload can never buffer unboundedly.
 const MAX_BODY_BYTES = 64 * 1024;
@@ -60,7 +69,21 @@ function loadJudgeEnv(mode: string, root: string): JudgeDeps["env"] {
   };
 }
 
+// Build the handler deps. In mock mode the real callModel seam is replaced and a
+// placeholder key is injected so the route's OPENAI_API_KEY gate passes without a
+// real credential ever being present.
+function makeDeps(env: JudgeDeps["env"]): JudgeDeps {
+  if (JUDGE_MOCK) {
+    return {
+      env: { ...env, OPENAI_API_KEY: env.OPENAI_API_KEY ?? "mock-key" },
+      callModel: mockCallModel,
+    };
+  }
+  return { env };
+}
+
 function makeMiddleware(env: JudgeDeps["env"]): Connect {
+  const deps = makeDeps(env);
   return (req, res, next) => {
     const url = req.url ?? "";
     // Match /api/judge with or without a query string.
@@ -80,7 +103,7 @@ function makeMiddleware(env: JudgeDeps["env"]): Connect {
     }
 
     readJsonBody(req)
-      .then((body) => handleJudgeRequest(body, { env }))
+      .then((body) => handleJudgeRequest(body, deps))
       .then(({ status, body }) => sendJson(res, status, body))
       .catch(() => {
         // Body read / parse failure — treat as a malformed request.
