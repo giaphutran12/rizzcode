@@ -54,6 +54,11 @@ export interface ScenarioFallbackGraph {
   boundarySignals: string[];
   exitSignals: string[];
   repliesByTurn: Record<1 | 2 | 3, Record<Engagement, string>>;
+  // Dedicated authored endings for the deterministic engine's terminal branches:
+  // boundaryReply closes firmly after a crossed line; exitReply says a warm
+  // goodbye when the USER bows out. Normal turns still use repliesByTurn.
+  boundaryReply: string;
+  exitReply: string;
 }
 
 export interface PersonaReply {

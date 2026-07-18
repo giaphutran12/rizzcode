@@ -114,6 +114,13 @@ describe("fallback graphs are complete", () => {
       }
     }
   });
+
+  it.each(scenarios)("$id has non-empty dedicated boundary and exit replies", (scenario) => {
+    expect(typeof scenario.fallback.boundaryReply).toBe("string");
+    expect(scenario.fallback.boundaryReply.trim()).not.toBe("");
+    expect(typeof scenario.fallback.exitReply).toBe("string");
+    expect(scenario.fallback.exitReply.trim()).not.toBe("");
+  });
 });
 
 describe("opening kinds match the mode", () => {

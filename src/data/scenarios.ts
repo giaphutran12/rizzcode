@@ -114,6 +114,10 @@ export const scenarios: Scenario[] = [
           warm: "Okay, I'm actually out here most afternoons around now. Find me if the plot twist is any good.",
         },
       },
+      boundaryReply:
+        "Yeah, no. I don't owe you a smile or my number, and that's the end of it. Take care of yourself.",
+      exitReply:
+        "Ha, go catch it — this beat the usual weather talk. Take care.",
     },
   },
 
@@ -222,6 +226,10 @@ export const scenarios: Scenario[] = [
           warm: "I'm hopeless at staying in touch after events, so — if you want to actually finish this conversation, put your number somewhere I'll see it.",
         },
       },
+      boundaryReply:
+        "Okay, that's not okay. I'm going to go find my friends now. Take care.",
+      exitReply:
+        "Aw — thanks, go enjoy the rest of your night. It was genuinely nice meeting you.",
     },
   },
 
@@ -324,6 +332,10 @@ export const scenarios: Scenario[] = [
           warm: "I'm here most Sunday mornings, honestly. Come say hi when I'm pretending to read again.",
         },
       },
+      boundaryReply:
+        "No. I came here to read, and I'm not going to be pushed on that. Please leave it there.",
+      exitReply:
+        "Thanks for being decent about it — enjoy the rest of your Sunday.",
     },
   },
 
@@ -420,6 +432,10 @@ export const scenarios: Scenario[] = [
           warm: "We're heading to that taco place after this — come find us, seriously.",
         },
       },
+      boundaryReply:
+        "Yeah, I'm not ditching my friends for anyone. We're gonna head out. Take care.",
+      exitReply:
+        "Ha, all good — enjoy your night. Maybe we'll cross paths later.",
     },
   },
 
@@ -519,6 +535,9 @@ export const scenarios: Scenario[] = [
           warm: "okay yes — coffee, thursday, but you're picking the place and it better not have karaoke",
         },
       },
+      boundaryReply:
+        "okay that's a hard no. i'm not doing this. take care of yourself.",
+      exitReply: "haha no worries at all — good talking to you, take care 🙂",
     },
   },
 
@@ -616,6 +635,8 @@ export const scenarios: Scenario[] = [
           warm: "genuinely the best thread i've had all week and it's MONDAY. keep going, i'm invested",
         },
       },
+      boundaryReply: "yeah, that one crossed a line. i'm gonna head out. take care.",
+      exitReply: "haha okay — night! text me tomorrow if the monday recovery goes well",
     },
   },
 
@@ -709,6 +730,8 @@ export const scenarios: Scenario[] = [
           warm: "okay you win. figure out a time and a place and i'm probably in",
         },
       },
+      boundaryReply: "okay no, that's not cute. i'm out. take care of yourself.",
+      exitReply: "ha okay, night! this was fun — don't be a stranger",
     },
   },
 
@@ -813,6 +836,9 @@ export const scenarios: Scenario[] = [
           warm: "it's a date 🥹 don't get weird now that i've said yes. see you thursday",
         },
       },
+      boundaryReply:
+        "yeah, no — i don't do pressure, and that's a dealbreaker for me. take care.",
+      exitReply: "no worries at all — this was nice either way. take care of yourself",
     },
   },
 
@@ -915,6 +941,9 @@ export const scenarios: Scenario[] = [
           warm: "okay you fully saved it. somehow we're better than before. what are you doing this weekend",
         },
       },
+      boundaryReply:
+        "okay that's a lot, and not in a good way. i'm gonna step back. take care.",
+      exitReply: "no worries — we're good. talk later, alright?",
     },
   },
 
@@ -1022,6 +1051,9 @@ export const scenarios: Scenario[] = [
           warm: "if i were in a different place i'd say yes in a heartbeat. i hope you know that. take care 💛",
         },
       },
+      boundaryReply:
+        "no. you don't get to talk to me like that. i'm done here. take care of yourself.",
+      exitReply: "thanks for understanding — genuinely. take care of yourself 💛",
     },
   },
 ];

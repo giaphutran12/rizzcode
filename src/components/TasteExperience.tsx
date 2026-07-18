@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import {
   ArrowRight,
@@ -12,6 +12,7 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { curriculum, rubric, scenario } from "../data/prototype";
+import { scenarios } from "../data/scenarios";
 import { usePracticeSession } from "../hooks/usePracticeSession";
 import "../styles/taste.css";
 
@@ -46,16 +47,25 @@ export function TasteExperience() {
   const pageRef = useRef<HTMLElement>(null);
   const desireRef = useRef<HTMLElement>(null);
   const [activeAccordion, setActiveAccordion] = useState(0);
-  const {
-    input,
-    isScored,
-    messages,
-    reset,
-    score,
-    setInput,
-    submit,
-    userTurns,
-  } = usePracticeSession();
+  // The UI task replaces this screen; for now, adapt the new session hook to
+  // the prototype's variable shape so the app keeps compiling. Draft text is a
+  // UI concern, so it lives here locally now that the hook no longer owns it.
+  const session = usePracticeSession({ scenario: scenarios[0] });
+  const [input, setInput] = useState("");
+  const messages = session.messages;
+  const isScored = session.status === "complete";
+  const userTurns = session.userTurn;
+  const score = session.result ? session.result.finalScore.toFixed(1) : "Pending";
+
+  function submit(event?: FormEvent) {
+    event?.preventDefault();
+    if (session.submitResponse(input)) setInput("");
+  }
+
+  function reset() {
+    session.reset();
+    setInput("");
+  }
 
   useGSAP(
     () => {
