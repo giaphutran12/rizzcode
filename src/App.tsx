@@ -1,6 +1,14 @@
 import { ArrowRight, Code, Sparkle } from "@phosphor-icons/react";
 import { BaselineExperience } from "./components/BaselineExperience";
 import { TasteExperience } from "./components/TasteExperience";
+import { CurriculumView } from "./components/product/CurriculumView";
+import { LeaderboardView } from "./components/product/LeaderboardView";
+import { NotFoundView } from "./components/product/NotFoundView";
+import { OnboardingView } from "./components/product/OnboardingView";
+import { PracticeView } from "./components/product/PracticeView";
+import { ProgressView } from "./components/product/ProgressView";
+import { RizzCodeProvider } from "./context/RizzCodeContext";
+import { getScenario } from "./data/scenarios";
 
 function DesignPicker() {
   return (
@@ -11,50 +19,41 @@ function DesignPicker() {
           <span>RC</span>
           RIZZCODE
         </a>
-        <p>Prototype comparison</p>
+        <p>Historical prototype comparison</p>
       </header>
-
       <section className="picker__intro">
-        <p className="picker__eyebrow">Same product. Two design systems.</p>
-        <h1>Which interface makes you want to practice?</h1>
+        <p className="picker__eyebrow">The Taste direction won.</p>
+        <h1>Two visual starting points. One shipped product.</h1>
         <p>
-          Both versions use the same scenario, scoring model, and three-turn
-          interaction. Pick on clarity, feeling, and whether you would come back
-          tomorrow.
+          Version A remains a historical control. Version B became the full
+          RizzCode experience.
         </p>
       </section>
-
       <section className="picker__cards" aria-label="Design choices">
         <a className="picker-card picker-card--control" href="/control">
           <div className="picker-card__icon">
             <Code size={24} weight="bold" />
           </div>
           <div>
-            <span>Version A</span>
+            <span>Historical Version A</span>
             <h2>Practice Console</h2>
-            <p>
-              Dense, familiar, and built like the developer tools you already
-              know.
-            </p>
+            <p>Original control prototype retained as a visual reference.</p>
           </div>
           <strong>
             Open control <ArrowRight size={18} />
           </strong>
         </a>
-
         <a className="picker-card picker-card--taste" href="/">
           <div className="picker-card__icon">
             <Sparkle size={24} weight="fill" />
           </div>
           <div>
-            <span>Version B</span>
-            <h2>Intentional Practice</h2>
-            <p>
-              Editorial, cinematic, and designed to make practice feel human.
-            </p>
+            <span>Production direction</span>
+            <h2>RizzCode Taste</h2>
+            <p>The editorial system extended across the complete MVP.</p>
           </div>
           <strong>
-            Open Taste version <ArrowRight size={18} />
+            Open RizzCode <ArrowRight size={18} />
           </strong>
         </a>
       </section>
@@ -62,16 +61,37 @@ function DesignPicker() {
   );
 }
 
-export function App() {
+function Routes() {
   const route = window.location.pathname.replace(/\/+$/, "") || "/";
 
-  if (route === "/control") {
-    return <BaselineExperience />;
+  if (route === "/") return <TasteExperience />;
+  if (route === "/onboarding") return <OnboardingView />;
+  if (route === "/practice") return <CurriculumView />;
+  if (route.startsWith("/practice/")) {
+    let scenarioId: string | undefined;
+    try {
+      scenarioId = decodeURIComponent(route.slice("/practice/".length));
+    } catch {
+      scenarioId = undefined;
+    }
+    const scenario = scenarioId ? getScenario(scenarioId) : undefined;
+    return scenario ? (
+      <PracticeView scenario={scenario} />
+    ) : (
+      <CurriculumView notice="That scenario does not exist. Pick one from the canonical ten below." />
+    );
   }
+  if (route === "/progress") return <ProgressView />;
+  if (route === "/leaderboard") return <LeaderboardView />;
+  if (route === "/control") return <BaselineExperience />;
+  if (route === "/compare") return <DesignPicker />;
+  return <NotFoundView />;
+}
 
-  if (route === "/compare") {
-    return <DesignPicker />;
-  }
-
-  return <TasteExperience />;
+export function App() {
+  return (
+    <RizzCodeProvider>
+      <Routes />
+    </RizzCodeProvider>
+  );
 }

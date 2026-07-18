@@ -1,26 +1,44 @@
 {
-  "name": "rizzcode-dating-prototype",
+  "name": "rizzcode-mvp",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx server/index.ts",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "preview": "NODE_ENV=production tsx server/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:live-judge": "tsx server/judge/liveSmoke.ts",
     "check": "tsc -b"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.0",
     "@gsap/react": "^2.1.2",
     "@phosphor-icons/react": "^2.1.10",
+    "ai": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "gsap": "^3.13.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "jsdom": "^27.1.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.8.3",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "vitest": "^4.0.6"
   }
 }
