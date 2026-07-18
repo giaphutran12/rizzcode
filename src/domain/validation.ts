@@ -96,6 +96,10 @@ export type FinalizeResult =
   | { ok: true; result: JudgeResult }
   | { ok: false; errors: string[] };
 
+// Finalizes a judge draft into a verified JudgeResult.
+// Precondition: draft.SHAPE is guaranteed by the caller's Zod schema (Task 4 judge server).
+// This function owns semantic validation (excerpt citations, criterion presence, score bounds, etc.),
+// not shape parsing.
 export function finalizeJudgeResult(
   draft: JudgeDraft,
   ctx: FinalizeContext,
@@ -109,6 +113,10 @@ export function finalizeJudgeResult(
 
   // Verify one piece of evidence cites a real user turn and quotes it exactly.
   const verifyEvidence = (evidence: DraftEvidence, where: string): void => {
+    if (evidence.excerpt.trim().length === 0) {
+      errors.push(`${where}: excerpt must not be empty or whitespace-only`);
+      return;
+    }
     const body = bodyByTurn.get(evidence.turn);
     if (body === undefined) {
       errors.push(

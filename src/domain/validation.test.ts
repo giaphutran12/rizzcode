@@ -120,6 +120,50 @@ describe("finalizeJudgeResult — rejections", () => {
     if (outcome.ok) return;
     expect(outcome.errors.some((e) => e.includes("unknown code"))).toBe(true);
   });
+
+  it("rejects an empty excerpt in rubric evidence", () => {
+    const draft = validDraft();
+    draft.rubric[0] = {
+      ...draft.rubric[0],
+      evidence: { turn: 1, excerpt: "", reason: "cited nothing" },
+    };
+    const outcome = finalizeJudgeResult(draft, ctx);
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) return;
+    expect(outcome.errors.some((e) => e.includes("empty or whitespace-only"))).toBe(
+      true,
+    );
+  });
+
+  it("rejects a whitespace-only excerpt in hardGate evidence", () => {
+    const draft = validDraft();
+    draft.hardGate = {
+      triggered: false,
+      severity: "none",
+      codes: [],
+      evidence: [{ turn: 1, excerpt: "   ", reason: "just whitespace" }],
+    };
+    const outcome = finalizeJudgeResult(draft, ctx);
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) return;
+    expect(outcome.errors.some((e) => e.includes("empty or whitespace-only"))).toBe(
+      true,
+    );
+  });
+
+  it("rejects a whitespace-only excerpt in outcome basis", () => {
+    const draft = validDraft();
+    draft.outcome = {
+      ...draft.outcome,
+      basis: [{ turn: 2, excerpt: "\t\n", reason: "tabs and newlines" }],
+    };
+    const outcome = finalizeJudgeResult(draft, ctx);
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) return;
+    expect(outcome.errors.some((e) => e.includes("empty or whitespace-only"))).toBe(
+      true,
+    );
+  });
 });
 
 describe("finalizeJudgeResult — recomputation overrides draft lies", () => {
