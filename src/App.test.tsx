@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { App } from "./App";
 
 vi.mock("@gsap/react", () => ({
@@ -28,10 +29,27 @@ describe("App", () => {
   });
 
   it("renders the RizzCode hero", () => {
-    render(<App />);
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
 
     expect(
       screen.getByRole("heading", { level: 1, name: /Practice courage\./ }),
     ).toBeInTheDocument();
+  });
+
+  it("renders a real not-found state on an unknown route", () => {
+    render(
+      <MemoryRouter initialEntries={["/definitely-not-a-route"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: /This one didn.t land\./ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Back home/ })).toBeInTheDocument();
   });
 });

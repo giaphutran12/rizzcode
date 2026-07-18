@@ -7,6 +7,11 @@
 // Key guarantees mirrored from the layers below:
 //  - recordResult persists a schema-validated judge result through the pure XP
 //    core and returns the full outcome (deltas, unlocks, level-up).
+//  - recordAttempt appends the completed transcript to the capped attempts store
+//    (additive UI helper, Task 6a): the result path already persists progress,
+//    but the finished attempt itself is the raw record the results view saves so
+//    history survives a reload. It shares the same backend, so a quota demote
+//    keeps a single coherent `persistent` flag.
 //  - recordMilestone writes a PRIVATE milestone only — it never touches
 //    publicXP, level, or best scores.
 //  - resetProgress clears all four rizzcode.v1.* records.
@@ -17,6 +22,7 @@ import { buildOnboardingPlan, defaultOnboardingPlan } from "../domain/onboarding
 import { applyJudgeResult } from "../domain/progression";
 import type { ApplyJudgeResultOutcome } from "../domain/progression";
 import type {
+  Attempt,
   JudgeResult,
   Milestone,
   MilestoneCode,
@@ -59,6 +65,7 @@ export interface UseProgressResult {
   completeOnboarding(profile: UserProfile): void;
   skipOnboarding(): void;
   recordResult(scenario: Scenario, result: JudgeResult): ApplyJudgeResultOutcome;
+  recordAttempt(attempt: Attempt): void;
   recordMilestone(code: MilestoneCode): void;
   resetProgress(): void;
 }
@@ -167,6 +174,14 @@ export function useProgress(options: UseProgressOptions = {}): UseProgressResult
     [stores, refresh, clock],
   );
 
+  const recordAttempt = useCallback(
+    (attempt: Attempt) => {
+      stores.attempts.append(attempt);
+      refresh();
+    },
+    [stores, refresh],
+  );
+
   const recordMilestone = useCallback(
     (code: MilestoneCode) => {
       const milestone: Milestone = {
@@ -208,6 +223,7 @@ export function useProgress(options: UseProgressOptions = {}): UseProgressResult
     completeOnboarding,
     skipOnboarding,
     recordResult,
+    recordAttempt,
     recordMilestone,
     resetProgress,
   };
