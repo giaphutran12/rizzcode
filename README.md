@@ -169,6 +169,14 @@ headers, API keys, and other request headers. Conversation text is included
 because these logs are for production debugging, so access to Runtime Logs
 must remain restricted to trusted operators.
 
+The same committed events are appended to the server-only
+`public.rizzcode_conversation_events` Supabase table. It preserves user
+messages, persona replies, judge results and failures, model identity, and the
+authenticated user ID when available. RLS is enabled; `anon` and
+`authenticated` have no table access. Only the backend `SUPABASE_SECRET_KEY`
+writer can insert or inspect these records. Idle, unsent draft preparation is
+not persisted.
+
 Then run:
 
 ```bash
