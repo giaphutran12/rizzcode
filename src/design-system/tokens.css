@@ -1,0 +1,96 @@
+:root {
+  color-scheme: light;
+
+  /* Brand anchors. Never redefine these outside this file. */
+  --rc-color-parchment: #f2e8d5;
+  --rc-color-parchment-deep: #e7d6bb;
+  --rc-color-cream: #fff8ed;
+  --rc-color-ink: #171612;
+  --rc-color-ink-soft: #302e28;
+  --rc-color-oxblood: #6d1f2a;
+  --rc-color-oxblood-bright: #9c3843;
+  --rc-color-lime: #c5f35f;
+  --rc-color-lime-soft: #e4ffab;
+
+  /* Semantic color roles. Components consume these, not brand anchors. */
+  --rc-surface-canvas: var(--rc-color-parchment);
+  --rc-surface-raised: var(--rc-color-cream);
+  --rc-surface-subtle: #f8efdf;
+  --rc-surface-strong: var(--rc-color-ink);
+  --rc-surface-brand: var(--rc-color-oxblood);
+  --rc-surface-success: #e8f7c8;
+  --rc-surface-warning: #f8dca8;
+  --rc-surface-danger: #fff3e5;
+  --rc-text-primary: var(--rc-color-ink);
+  --rc-text-secondary: #5f584d;
+  --rc-text-muted: #756d61;
+  --rc-text-inverse: var(--rc-color-cream);
+  --rc-text-brand: var(--rc-color-oxblood);
+  --rc-text-success: #2e3c12;
+  --rc-text-danger: var(--rc-color-oxblood);
+  --rc-border-default: rgba(23, 22, 18, 0.2);
+  --rc-border-strong: var(--rc-color-ink);
+  --rc-focus: var(--rc-color-oxblood-bright);
+
+  /* Type roles. Satoshi is the product workhorse; Playfair adds intent. */
+  --rc-font-sans: "Satoshi", "Manrope", system-ui, sans-serif;
+  --rc-font-display: "Satoshi", "Manrope", system-ui, sans-serif;
+  --rc-font-editorial: "Playfair Display", Georgia, serif;
+  --rc-font-mono: "DM Mono", ui-monospace, monospace;
+  --rc-type-label: 0.6875rem;
+  --rc-type-body-sm: 0.8125rem;
+  --rc-type-body: 1rem;
+  --rc-type-body-lg: 1.125rem;
+  --rc-type-title-sm: clamp(2rem, 5vw, 4rem);
+  --rc-type-title: clamp(3.25rem, 7vw, 7.6rem);
+  --rc-leading-tight: 0.88;
+  --rc-leading-body: 1.55;
+  --rc-tracking-tight: -0.06em;
+  --rc-tracking-label: 0.12em;
+
+  /* Four-point spacing grid. */
+  --rc-space-0: 0;
+  --rc-space-1: 0.25rem;
+  --rc-space-2: 0.5rem;
+  --rc-space-3: 0.75rem;
+  --rc-space-4: 1rem;
+  --rc-space-5: 1.25rem;
+  --rc-space-6: 1.5rem;
+  --rc-space-8: 2rem;
+  --rc-space-10: 2.5rem;
+  --rc-space-12: 3rem;
+  --rc-space-16: 4rem;
+  --rc-space-20: 5rem;
+  --rc-space-24: 6rem;
+  --rc-space-30: 7.5rem;
+
+  /* Editorial, not bubbly. */
+  --rc-radius-none: 0;
+  --rc-radius-xs: 2px;
+  --rc-radius-sm: 6px;
+  --rc-radius-md: 10px;
+  --rc-radius-pill: 999px;
+
+  --rc-border-width: 1px;
+  --rc-shadow-raised: 0 12px 36px rgba(23, 22, 18, 0.12);
+  --rc-shadow-float: 0 6px 24px rgba(23, 22, 18, 0.24);
+
+  --rc-duration-fast: 140ms;
+  --rc-duration-base: 220ms;
+  --rc-duration-slow: 420ms;
+  --rc-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --rc-content-wide: 1500px;
+  --rc-content-reading: 720px;
+  --rc-nav-height: 76px;
+  --rc-control-height: 50px;
+  --rc-focus-ring: 3px solid var(--rc-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --rc-duration-fast: 0ms;
+    --rc-duration-base: 0ms;
+    --rc-duration-slow: 0ms;
+  }
+}

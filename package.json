@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "brand:assets": "node scripts/build-brand-assets.mjs",
+    "check:brand": "node scripts/check-brand-system.mjs",
+    "prebuild": "npm run brand:assets",
     "dev": "next dev --hostname 127.0.0.1 --port ${PORT:-4173}",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port ${PORT:-4173}",
@@ -11,7 +14,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:live-judge": "tsx server/judge/liveSmoke.ts",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit && npm run check:brand"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.0",
@@ -34,6 +37,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "jsdom": "^27.1.0",
+    "sharp": "^0.35.3",
     "tsx": "^4.20.6",
     "typescript": "^5.8.3",
     "vitest": "^4.0.6"

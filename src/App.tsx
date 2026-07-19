@@ -4,6 +4,7 @@ import { ArrowRight, Code, Sparkle } from "@phosphor-icons/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { BaselineExperience } from "./components/BaselineExperience";
 import { TasteExperience } from "./components/TasteExperience";
+import { BrandSystemView } from "./design-system/BrandSystemView";
 import { CurriculumView } from "./components/product/CurriculumView";
 import { LeaderboardView } from "./components/product/LeaderboardView";
 import { NotFoundView } from "./components/product/NotFoundView";
@@ -102,6 +103,7 @@ function Routes() {
   }
 
   if (route === "/") return <TasteExperience />;
+  if (route === "/brand-system") return <BrandSystemView />;
   if (route === "/onboarding") return <OnboardingView />;
   if (route === "/practice") return <CurriculumView />;
   if (route.startsWith("/practice/")) {

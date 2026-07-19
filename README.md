@@ -5,6 +5,23 @@ GPT comparison build implements the approved MVP contract in
 [docs/RIZZCODE_MASTER_PLAN.md](docs/RIZZCODE_MASTER_PLAN.md) while preserving
 the Taste visual direction.
 
+## Brand system
+
+RizzCode ships with a repo-native brand package so product work does not
+recreate visual decisions feature by feature:
+
+- [Brand system and usage contract](docs/BRAND_SYSTEM.md)
+- [Canonical logo assets](docs/brand/README.md)
+- Tokens and components in `src/design-system`
+- Living inventory at `/brand-system`
+- Automated guardrail through `npm run check:brand`
+
+Import shared UI from the package boundary:
+
+```tsx
+import { BrandButton, BrandLogo, RizzMeter } from "@/design-system";
+```
+
 ## What is implemented
 
 - Four-question onboarding, skip path, personalized starting module, two skill

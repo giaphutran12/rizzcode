@@ -13,6 +13,15 @@
     "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/design-system": [
+        "src/design-system/index.ts"
+      ],
+      "@/design-system/*": [
+        "src/design-system/*"
+      ]
+    },
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
