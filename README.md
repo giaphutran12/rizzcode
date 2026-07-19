@@ -92,6 +92,25 @@ The optional
 `RIZZCODE_PERSONA_MODEL` defaults to `gpt-5.4-mini`; the separate
 `RIZZCODE_JUDGE_MODEL` defaults to `gpt-5.4`.
 
+### Conversation debug logs
+
+The server writes one-line JSON events for every committed persona turn and
+every judge operation. In Vercel Runtime Logs, filter for
+`rizzcode-conversation` or an `attemptId`. The event names are:
+
+- `persona.turn.completed`
+- `persona.provider.failed`
+- `judge.started`
+- `judge.completed`
+- `judge.failed`
+
+Events include the canonical transcript, scenario, model, persona state,
+fallback status, parsed model result when available, and bounded validation
+error details. They intentionally exclude session tokens, authorization
+headers, API keys, and other request headers. Conversation text is included
+because these logs are for production debugging, so access to Runtime Logs
+must remain restricted to trusted operators.
+
 Then run:
 
 ```bash
