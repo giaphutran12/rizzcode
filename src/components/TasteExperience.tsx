@@ -5,15 +5,19 @@ import {
   ArrowUpRight,
   BookOpen,
   CheckCircle,
+  Fire,
   Heart,
   ShieldCheck,
   Target,
 } from "@phosphor-icons/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { curriculum, rubric, scenario } from "../data/prototype";
-import { usePracticeSession } from "../hooks/usePracticeSession";
+import { navigate } from "../router";
+import { useProgressStore } from "../hooks/useProgress";
+import { scenarios } from "../data/scenarios";
+import { nextScenarioId } from "../domain/unlocks";
 import "../styles/taste.css";
+import "../styles/app.css";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -38,7 +42,7 @@ const accordionStories = [
 const marqueePhrases = [
   "Respect before performance",
   "Curiosity without tactics",
-  "Clarity without pressure",
+  "Humor without pressure",
   "Confidence with character",
 ];
 
@@ -46,16 +50,18 @@ export function TasteExperience() {
   const pageRef = useRef<HTMLElement>(null);
   const desireRef = useRef<HTMLElement>(null);
   const [activeAccordion, setActiveAccordion] = useState(0);
-  const {
-    input,
-    isScored,
-    messages,
-    reset,
-    score,
-    setInput,
-    submit,
-    userTurns,
-  } = usePracticeSession();
+  const { progress, profile, warning } = useProgressStore();
+
+  const featured = scenarios[1]; // open-source social — the hero flavor
+  const firstScenario = scenarios[0];
+  const orderedIds = scenarios.map((scenario) => scenario.id);
+  const nextId = nextScenarioId(progress.completedScenarioIds, orderedIds);
+  const nextScenario =
+    scenarios.find((scenario) => scenario.id === nextId) ?? firstScenario;
+  const isReturning = progress.completedScenarioIds.length > 0 || progress.publicXP > 0;
+  const ctaTarget = profile.onboardingComplete
+    ? `/practice/${nextScenario.id}`
+    : "/onboarding";
 
   useGSAP(
     () => {
@@ -101,21 +107,34 @@ export function TasteExperience() {
     { scope: pageRef },
   );
 
-  const progress = `${Math.min(userTurns, 3) * 33.333}%`;
+  const go = (to: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    navigate(to);
+  };
 
   return (
     <main ref={pageRef} className="taste-page">
       <header className="taste-nav">
-        <a className="taste-nav__brand" href="/" aria-label="RizzCode home">
+        <a
+          className="taste-nav__brand"
+          href="/"
+          aria-label="RizzCode home"
+          onClick={go("/")}
+        >
           <span aria-hidden="true">RC</span>
           <strong>RizzCode</strong>
         </a>
         <nav aria-label="RizzCode navigation">
           <a href="#approach">Approach</a>
-          <a href="#practice">Practice</a>
-          <a href="#curriculum">Curriculum</a>
+          <a href="/practice" onClick={go("/practice")}>
+            Practice
+          </a>
+          <a href="/leaderboard" onClick={go("/leaderboard")}>
+            Leaderboard
+          </a>
         </nav>
-        <a className="taste-nav__switch" href="#practice">
+        <a className="taste-nav__switch" href={ctaTarget} onClick={go(ctaTarget)}>
           Start practice
           <ArrowUpRight size={17} weight="bold" />
         </a>
@@ -124,20 +143,24 @@ export function TasteExperience() {
       <section className="taste-hero" aria-labelledby="taste-hero-title">
         <div className="taste-hero__wash" aria-hidden="true" />
         <div className="taste-hero__copy">
-          <p className="taste-kicker">Relationship practice for men</p>
+          <p className="taste-kicker">LeetCode-style reps for dating</p>
           <h1 id="taste-hero-title">
             <span>Practice courage.</span>
             <span>Meet someone</span>
             <span className="taste-hero__intent">with intention.</span>
           </h1>
           <p className="taste-hero__lede">
-            RizzCode helps men rehearse honest conversations, read reciprocity,
-            and make respectful invitations without scripts, games, or
-            pretending to be someone else.
+            RizzCode is three-turn practice for real social moments: what you
+            notice, how you listen, and whether your invitation honors the
+            person in front of you. No scripts, no games, no pretending.
           </p>
           <div className="taste-hero__actions">
-            <a className="taste-button taste-button--ink" href="#practice">
-              Enter the scenario
+            <a
+              className="taste-button taste-button--ink"
+              href={ctaTarget}
+              onClick={go(ctaTarget)}
+            >
+              {isReturning ? "Resume practice" : "Enter your first scenario"}
               <ArrowRight size={19} weight="bold" />
             </a>
             <a className="taste-button taste-button--quiet" href="#approach">
@@ -157,9 +180,9 @@ export function TasteExperience() {
           <figcaption>
             <div>
               <span>Tonight’s scenario</span>
-              <strong>{scenario.title}</strong>
+              <strong>{featured.title}</strong>
             </div>
-            <p>{scenario.place}</p>
+            <p>{featured.setting}</p>
           </figcaption>
         </figure>
       </section>
@@ -180,8 +203,8 @@ export function TasteExperience() {
             a brave first move.
           </h2>
           <p>
-            Practice the whole moment: what you notice, how you listen, and
-            whether your invitation honors the person in front of you.
+            Two modules. Spark teaches the first moment; Connection teaches
+            everything after. Every scenario is judged on evidence, not vibes.
           </p>
         </div>
 
@@ -192,11 +215,11 @@ export function TasteExperience() {
               <span>Practice in context</span>
             </div>
             <div>
-              <h3>{scenario.title}</h3>
-              <p>{scenario.premise}</p>
+              <h3>{firstScenario.title}</h3>
+              <p>{firstScenario.premise}</p>
             </div>
             <ul>
-              {scenario.context.map((item) => (
+              {firstScenario.visibleContext.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -219,10 +242,10 @@ export function TasteExperience() {
 
           <article className="taste-bento__card taste-bento__card--principle">
             <ShieldCheck size={27} weight="duotone" />
-            <h3>Never a tactic.</h3>
+            <h3>Fun is the game. Respect is the floor.</h3>
             <p>
-              Respect, consent, and an honest exit are part of every scenario,
-              not fine print after the lesson.
+              Humor and forward motion raise your score. Pressure, deception,
+              or an ignored boundary ends the attempt — every time.
             </p>
           </article>
 
@@ -242,12 +265,18 @@ export function TasteExperience() {
             </div>
             <h3>One honest rep at a time.</h3>
             <div className="taste-mini-curriculum">
-              {curriculum.slice(0, 3).map((lesson) => (
-                <div key={lesson.title}>
-                  <span>{lesson.status}</span>
-                  <p>{lesson.title}</p>
-                </div>
-              ))}
+              <div>
+                <span>Module 01</span>
+                <p>Spark — openers, banter, calibrated asks</p>
+              </div>
+              <div>
+                <span>Module 02</span>
+                <p>Connection — threads, callbacks, invitations</p>
+              </div>
+              <div>
+                <span>Judged</span>
+                <p>Five criteria, real evidence, XP that means something</p>
+              </div>
             </div>
           </article>
         </div>
@@ -300,153 +329,83 @@ export function TasteExperience() {
       >
         <div className="taste-desire__grid">
           <div className="taste-desire__narrative">
-            <p className="taste-kicker">Try the whole moment</p>
+            <p className="taste-kicker">Your next rep</p>
             <h2 id="taste-practice-title">
               You do not need a perfect line.
             </h2>
             <p>
               You need enough calm to listen, enough courage to be clear, and
-              enough humility to receive her answer. Take three turns. RizzCode
-              will score the posture behind your words.
+              enough humility to receive her answer. Three turns. Then an
+              honest judge tells you exactly what landed.
             </p>
             <div className="taste-desire__progress">
               <div>
-                <span>Conversation progress</span>
-                <strong>{Math.min(userTurns, 3)} of 3 turns</strong>
+                <span>Your progress</span>
+                <strong>
+                  {progress.completedScenarioIds.length}/{scenarios.length} scenarios ·{" "}
+                  Level {progress.level}
+                </strong>
               </div>
               <div className="taste-progress-track" aria-hidden="true">
-                <span style={{ width: progress }} />
+                <span
+                  style={{
+                    width: `${(progress.completedScenarioIds.length / scenarios.length) * 100}%`,
+                  }}
+                />
               </div>
             </div>
+            {isReturning && (
+              <div className="taste-stat-row" style={{ marginTop: 22 }}>
+                <span className="taste-stat">
+                  XP <strong>{progress.publicXP}</strong>
+                </span>
+                <span className="taste-stat">
+                  <Fire size={15} weight="fill" /> Streak{" "}
+                  <strong>{progress.streak}</strong>
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="taste-desire__practice">
             <article className="taste-practice-card taste-practice-card--context">
               <div className="taste-practice-card__topline">
-                <span>Scenario context</span>
-                <strong>{scenario.difficulty}</strong>
+                <span>{isReturning ? "Up next for you" : "Start here"}</span>
+                <strong>{nextScenario.difficulty}</strong>
               </div>
-              <h3>{scenario.title}</h3>
-              <p>{scenario.objective}</p>
+              <h3>{nextScenario.title}</h3>
+              <p>{nextScenario.objective}</p>
               <div className="taste-context-list">
-                {scenario.boundaries.map((boundary) => (
+                <span>
+                  <CheckCircle size={17} weight="fill" />
+                  {nextScenario.mode === "in_person" ? "In person" : "Messaging"}
+                </span>
+                {nextScenario.boundaries.map((boundary) => (
                   <span key={boundary}>
                     <CheckCircle size={17} weight="fill" />
                     {boundary}
                   </span>
                 ))}
               </div>
-            </article>
-
-            <article className="taste-practice-card taste-practice-card--conversation">
-              <div className="taste-practice-card__topline">
-                <span>Live practice</span>
-                <strong>{isScored ? "Complete" : scenario.time}</strong>
-              </div>
-
-              <div
-                className="taste-conversation"
-                aria-live="polite"
-                aria-label="Practice conversation"
-              >
-                {messages.map((message) => (
-                  <div
-                    className={`taste-message taste-message--${message.speaker}`}
-                    key={message.id}
-                  >
-                    <span>{message.speaker === "you" ? "You" : "Her"}</span>
-                    <p>{message.body}</p>
-                  </div>
-                ))}
-              </div>
-
-              {!isScored ? (
-                <form className="taste-response" onSubmit={submit}>
-                  <label htmlFor="taste-response-input">
-                    Your next response
-                  </label>
-                  <textarea
-                    id="taste-response-input"
-                    value={input}
-                    onChange={(event) => setInput(event.target.value)}
-                    rows={4}
-                    maxLength={420}
-                  />
-                  <div>
-                    <span>{input.length}/420</span>
-                    <button type="submit" disabled={!input.trim()}>
-                      {userTurns >= 2 ? "Finish and score" : "Send response"}
-                      <ArrowRight size={18} weight="bold" />
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="taste-complete">
-                  <CheckCircle size={25} weight="fill" />
-                  <div>
-                    <strong>Practice complete</strong>
-                    <span>Your rubric is ready below.</span>
-                  </div>
-                  <button type="button" onClick={reset}>
-                    Practice again
-                  </button>
-                </div>
-              )}
-            </article>
-
-            <article className="taste-practice-card taste-practice-card--rubric">
-              <div className="taste-score">
-                <span>Conversation score</span>
-                <strong>{isScored ? score : "Pending"}</strong>
-                <p>
-                  {isScored
-                    ? "Warm, specific, and grounded. Keep the invitation low-pressure."
-                    : "Complete all three turns to reveal your score."}
-                </p>
-              </div>
-              <div className="taste-rubric-list">
-                {rubric.map((item) => (
-                  <div className="taste-rubric-item" key={item.label}>
-                    <div>
-                      <strong>{item.label}</strong>
-                      <span>{isScored ? `${item.score}/10` : "Pending"}</span>
-                    </div>
-                    <div className="taste-rubric-track" aria-hidden="true">
-                      <span
-                        style={{
-                          width: isScored ? `${item.score * 10}%` : "0%",
-                        }}
-                      />
-                    </div>
-                    <p>{isScored ? item.note : "Measured after completion."}</p>
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            <article
-              id="curriculum"
-              className="taste-practice-card taste-practice-card--curriculum"
-            >
-              <div className="taste-practice-card__topline">
-                <span>Your curriculum</span>
-                <strong>Foundations</strong>
-              </div>
-              <div className="taste-curriculum-list">
-                {curriculum.map((lesson, index) => (
-                  <div
-                    className="taste-curriculum-item"
-                    data-status={lesson.status.toLowerCase()}
-                    key={lesson.title}
-                  >
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div>
-                      <strong>{lesson.title}</strong>
-                      <p>{lesson.detail}</p>
-                    </div>
-                    <em>{lesson.status}</em>
-                  </div>
-                ))}
+              <div className="taste-result-actions" style={{ marginTop: 30 }}>
+                <a
+                  className="taste-button taste-button--lime"
+                  href={ctaTarget}
+                  onClick={go(ctaTarget)}
+                >
+                  {profile.onboardingComplete
+                    ? "Enter the scenario"
+                    : "Start with four questions"}
+                  <ArrowRight size={18} weight="bold" />
+                </a>
+                <a
+                  className="taste-button taste-button--quiet"
+                  style={{ color: "#fff8ed", borderColor: "rgba(255,248,237,0.5)" }}
+                  href="/practice"
+                  onClick={go("/practice")}
+                >
+                  Browse all ten
+                </a>
               </div>
             </article>
           </div>
@@ -462,23 +421,39 @@ export function TasteExperience() {
             <br />
             More courage.
           </h2>
-          <a className="taste-button taste-button--lime" href="#practice">
+          <a
+            className="taste-button taste-button--lime"
+            href={ctaTarget}
+            onClick={go(ctaTarget)}
+          >
             Begin the conversation
             <ArrowRight size={20} weight="bold" />
           </a>
         </div>
         <div className="taste-footer__bottom">
-          <a className="taste-nav__brand" href="/" aria-label="RizzCode home">
+          <a
+            className="taste-nav__brand"
+            href="/"
+            aria-label="RizzCode home"
+            onClick={go("/")}
+          >
             <span aria-hidden="true">RC</span>
             <strong>RizzCode</strong>
           </a>
           <p>Respectful relationship practice for men who want something real.</p>
           <div>
             <a href="#approach">Approach</a>
-            <a href="#practice">Practice</a>
+            <a href="/practice" onClick={go("/practice")}>
+              Practice
+            </a>
           </div>
         </div>
       </footer>
+      {warning && (
+        <div className="taste-storage-warning" role="status">
+          {warning}
+        </div>
+      )}
     </main>
   );
 }

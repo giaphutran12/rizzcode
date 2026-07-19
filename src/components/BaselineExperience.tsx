@@ -21,7 +21,7 @@ import {
   UserCircle,
 } from "@phosphor-icons/react";
 import { curriculum, rubric, scenario } from "../data/prototype";
-import { usePracticeSession } from "../hooks/usePracticeSession";
+import { usePrototypeSession } from "../hooks/usePrototypeSession";
 import "../styles/baseline.css";
 
 const navigation = [
@@ -41,7 +41,7 @@ export function BaselineExperience() {
     setInput,
     submit,
     userTurns,
-  } = usePracticeSession();
+  } = usePrototypeSession();
 
   const completedTurns = Math.min(userTurns, 3);
   const progress = (completedTurns / 3) * 100;

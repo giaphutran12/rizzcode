@@ -1,6 +1,13 @@
 import { ArrowRight, Code, Sparkle } from "@phosphor-icons/react";
+import { useRoute } from "./router";
 import { BaselineExperience } from "./components/BaselineExperience";
 import { TasteExperience } from "./components/TasteExperience";
+import { OnboardingView } from "./components/OnboardingView";
+import { CurriculumView } from "./components/CurriculumView";
+import { PracticeView } from "./components/PracticeView";
+import { ProgressView } from "./components/ProgressView";
+import { LeaderboardView } from "./components/LeaderboardView";
+import { NotFoundView } from "./components/NotFoundView";
 
 function DesignPicker() {
   return (
@@ -63,15 +70,26 @@ function DesignPicker() {
 }
 
 export function App() {
-  const route = window.location.pathname.replace(/\/+$/, "") || "/";
+  const route = useRoute();
 
-  if (route === "/control") {
-    return <BaselineExperience />;
+  switch (route.name) {
+    case "landing":
+      return <TasteExperience />;
+    case "onboarding":
+      return <OnboardingView />;
+    case "curriculum":
+      return <CurriculumView />;
+    case "practice":
+      return <PracticeView scenarioId={route.scenarioId} />;
+    case "progress":
+      return <ProgressView />;
+    case "leaderboard":
+      return <LeaderboardView />;
+    case "control":
+      return <BaselineExperience />;
+    case "compare":
+      return <DesignPicker />;
+    case "not-found":
+      return <NotFoundView path={route.path} />;
   }
-
-  if (route === "/compare") {
-    return <DesignPicker />;
-  }
-
-  return <TasteExperience />;
 }
