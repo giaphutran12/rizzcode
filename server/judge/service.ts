@@ -4,6 +4,7 @@ import type {
   Attempt,
   JudgeApiResponse,
   JudgeErrorCode,
+  JudgeModelDraft,
   JudgeRequest,
 } from "../../src/domain/types";
 import {
@@ -18,6 +19,10 @@ import {
   aiSdkJudgeProvider,
   type JudgeProvider,
 } from "./provider";
+import {
+  logConversationEvent,
+  modelErrorDetails,
+} from "../observability/conversationLog";
 
 class JudgeServiceError extends Error {
   constructor(
@@ -143,12 +148,23 @@ export async function judgeAttempt(
           },
         };
   const hardGate = detectHardGates(attempt);
+  const model = process.env.RIZZCODE_JUDGE_MODEL || "gpt-5.4";
+  logConversationEvent("info", {
+    event: "judge.started",
+    attemptId: request.attemptId,
+    scenarioId: request.scenarioId,
+    model,
+    conversation: attempt.messages,
+    personaState: attempt.personaState,
+    details: { hardGate },
+  });
 
   let lastError: JudgeServiceError | undefined;
   for (let operation = 0; operation < 2; operation += 1) {
+    let draft: JudgeModelDraft | undefined;
     try {
       const abortSignal = AbortSignal.timeout(18_000);
-      const draft = await provider.evaluate({
+      draft = await provider.evaluate({
         scenario,
         attempt,
         hardGate,
@@ -160,12 +176,40 @@ export async function judgeAttempt(
         attempt,
         draft,
       });
+      logConversationEvent("info", {
+        event: "judge.completed",
+        attemptId: request.attemptId,
+        scenarioId: request.scenarioId,
+        model,
+        operation: operation + 1,
+        conversation: attempt.messages,
+        personaState: attempt.personaState,
+        details: { draft, result },
+      });
       return { ok: true, result };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unknown judge failure";
+      const invalidOutput =
+        /rubric|evidence|outcome|structured|schema|parse|invalid/i.test(message);
+      logConversationEvent("error", {
+        event: "judge.failed",
+        attemptId: request.attemptId,
+        scenarioId: request.scenarioId,
+        model,
+        operation: operation + 1,
+        conversation: attempt.messages,
+        personaState: attempt.personaState,
+        details: {
+          classification: invalidOutput
+            ? "judge_invalid_output"
+            : classifyProviderError(error).code,
+          draft,
+          error: modelErrorDetails(error),
+        },
+      });
       if (
-        /rubric|evidence|outcome|structured|schema|parse|invalid/i.test(message)
+        invalidOutput
       ) {
         return {
           ok: false,

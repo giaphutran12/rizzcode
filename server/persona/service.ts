@@ -11,7 +11,10 @@ import type {
   PersonaReply,
   PersonaRequest,
 } from "../../src/domain/types";
-import { authoredFallbackReply } from "../../src/engine/conversationEngine";
+import {
+  authoredFallbackReply,
+  beginTurn,
+} from "../../src/engine/conversationEngine";
 import {
   aiSdkPersonaProvider,
   type PersonaProvider,
@@ -22,6 +25,10 @@ import {
   type PersonaConversationStore,
   type PreparedPersonaTurn,
 } from "./store";
+import {
+  logConversationEvent,
+  modelErrorDetails,
+} from "../observability/conversationLog";
 
 const engagementOrder: Engagement[] = ["closed", "low", "neutral", "warm"];
 const boundaryOrder = ["none", "soft", "explicit"] as const;
@@ -305,13 +312,24 @@ export class PersonaService {
     const { reply, usedFallback } = generated;
 
     try {
-      this.store.commitTurn({
+      const committedAttempt = this.store.commitTurn({
         scenario,
         attemptId: request.attemptId,
         turn: request.turn,
         body: request.body,
         reply,
         usedFallback,
+      });
+      logConversationEvent("info", {
+        event: "persona.turn.completed",
+        attemptId: request.attemptId,
+        scenarioId: request.scenarioId,
+        turn: request.turn,
+        model: process.env.RIZZCODE_PERSONA_MODEL || "gpt-5.4-mini",
+        usedFallback,
+        conversation: committedAttempt.messages,
+        personaState: committedAttempt.personaState,
+        details: { reply },
       });
     } catch (error) {
       return personaError(
@@ -389,7 +407,17 @@ export class PersonaService {
         attempt.personaState,
         request.turn,
       );
-    } catch {
+    } catch (error) {
+      logConversationEvent("error", {
+        event: "persona.provider.failed",
+        attemptId: request.attemptId,
+        scenarioId: request.scenarioId,
+        turn: request.turn,
+        model: process.env.RIZZCODE_PERSONA_MODEL || "gpt-5.4-mini",
+        conversation: beginTurn(attempt, request.body).messages,
+        personaState: attempt.personaState,
+        details: { error: modelErrorDetails(error) },
+      });
       usedFallback = true;
       reply = authoredFallbackReply({
         scenario,
