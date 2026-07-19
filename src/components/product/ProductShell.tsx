@@ -8,6 +8,7 @@ import {
   Trophy,
   X,
 } from "@phosphor-icons/react";
+import { BrandLogo } from "@/design-system";
 import { useRizzCode } from "../../context/RizzCodeContext";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/product.css";
@@ -28,9 +29,12 @@ export function ProductShell({
   return (
     <main className="rizz-product">
       <header className="rizz-nav">
-        <a className="rizz-brand" href="/" aria-label="RizzCode home">
-          <span aria-hidden="true">RC</span>
-          <strong>RizzCode</strong>
+        <a
+          className="rizz-brand rc-brand-link"
+          href="/"
+          aria-label="RizzCode home"
+        >
+          <BrandLogo className="rc-brand-logo" priority />
         </a>
         <nav aria-label="Main navigation">
           <a href="/">

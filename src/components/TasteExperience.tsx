@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { BrandLogo } from "@/design-system";
 import { useRizzCode } from "../context/RizzCodeContext";
 import { useAuth } from "../context/AuthContext";
 import { nextPracticeScenario } from "../domain/progression";
@@ -78,9 +79,12 @@ export function TasteExperience() {
   return (
     <main ref={pageRef} className="taste-page">
       <header className="taste-nav">
-        <a className="taste-nav__brand" href="/" aria-label="RizzCode home">
-          <span aria-hidden="true">RC</span>
-          <strong>RizzCode</strong>
+        <a
+          className="taste-nav__brand rc-brand-link"
+          href="/"
+          aria-label="RizzCode home"
+        >
+          <BrandLogo className="rc-brand-logo" priority />
         </a>
         <nav aria-label="RizzCode navigation">
           <a href="#approach">How it works</a>
@@ -325,9 +329,15 @@ export function TasteExperience() {
           </a>
         </div>
         <div className="taste-footer__bottom">
-          <a className="taste-nav__brand" href="/" aria-label="RizzCode home">
-            <span aria-hidden="true">RC</span>
-            <strong>RizzCode</strong>
+          <a
+            className="taste-nav__brand rc-brand-link"
+            href="/"
+            aria-label="RizzCode home"
+          >
+            <BrandLogo
+              className="rc-brand-logo rc-brand-logo--footer"
+              tone="inverse"
+            />
           </a>
           <p>Grounded social fluency for men who want something real.</p>
           <div>

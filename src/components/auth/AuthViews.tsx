@@ -9,6 +9,7 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { BrandLogo } from "@/design-system";
 import { useAuth } from "../../context/AuthContext";
 import {
   localAccountKeys,
@@ -29,9 +30,12 @@ function AuthFrame({
 }>) {
   return (
     <main className="rizz-auth">
-      <a className="rizz-auth__brand" href="/" aria-label="RizzCode home">
-        <span aria-hidden="true">RC</span>
-        <strong>RizzCode</strong>
+      <a
+        className="rizz-auth__brand rc-brand-link"
+        href="/"
+        aria-label="RizzCode home"
+      >
+        <BrandLogo className="rc-brand-logo" priority />
       </a>
       <section className="rizz-auth__panel">
         <p className="rizz-kicker">{eyebrow}</p>
