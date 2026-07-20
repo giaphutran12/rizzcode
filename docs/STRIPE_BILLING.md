@@ -19,11 +19,12 @@ The launch funnel and price are hypotheses. Compare three versus seven free
 guided practices after enough traffic exists to measure paid conversion within
 14 days of the first completed practice.
 
-## Account check before setup
+## Live account
 
-The Stripe account visible during initial setup was named `Instagram`. Do not
-create RizzCode live products in that account until the owner confirms it is the
-intended legal Stripe account for RizzCode. Use a Stripe sandbox while building.
+The existing Smart Math BC Stripe account was confirmed as the intended legal
+merchant for RizzCode on July 20, 2026. Its live `RizzCode Pro` product uses the
+lookup keys documented below. Continue using a Stripe sandbox for development
+and test payments; never use live credentials in local test fixtures.
 
 ## Dashboard setup
 
