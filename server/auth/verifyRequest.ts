@@ -1,4 +1,37 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type User } from "@supabase/supabase-js";
+
+export async function authenticatedUserForRequest(
+  request: Request,
+): Promise<User | null> {
+  if (
+    process.env.NODE_ENV === "test" ||
+    (process.env.NODE_ENV !== "production" &&
+      process.env.NEXT_PUBLIC_RIZZCODE_MOCK_AUTH === "1")
+  ) {
+    return {
+      id: "local-e2e-user",
+      email: "local@rizzcode.test",
+    } as User;
+  }
+
+  const publicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+  const authorization = request.headers.get("authorization") ?? "";
+  const token = authorization.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length).trim()
+    : "";
+  if (!publicUrl || !publishableKey || !token) return null;
+
+  const client = createClient(publicUrl, publishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const {
+    data: { user },
+    error,
+  } = await client.auth.getUser(token);
+  return error ? null : user;
+}
 
 export async function requestAuthenticatedUserId(
   request: Request,
@@ -10,24 +43,7 @@ export async function requestAuthenticatedUserId(
   ) {
     return undefined;
   }
-
-  const publicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
-  const authorization = request.headers.get("authorization") ?? "";
-  const token = authorization.startsWith("Bearer ")
-    ? authorization.slice("Bearer ".length).trim()
-    : "";
-  if (!publicUrl || !publishableKey || !token) return undefined;
-
-  const client = createClient(publicUrl, publishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const {
-    data: { user },
-    error,
-  } = await client.auth.getUser(token);
-  return error ? undefined : user?.id;
+  return (await authenticatedUserForRequest(request))?.id;
 }
 
 export async function requestHasAuthenticatedUser(request: Request) {

@@ -97,7 +97,7 @@ describe("product view contracts", () => {
         bestMasteryXP: { "RC-001": 7, "RC-002": 7, "RC-003": 7 },
         completedScenarioIds: ["RC-001", "RC-002", "RC-003"],
         achievements: [],
-        rewardedAttemptIds: ["a", "b", "c"],
+        rewardedAttemptIds: ["a"],
         lastPracticeDate: "2026-07-19",
       }),
     );
