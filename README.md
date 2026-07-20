@@ -142,17 +142,19 @@ newer local work.
 
 ### Enable account progress sync
 
-Apply `supabase/migrations/20260719012231_account_state_sync.sql` to the same
-Supabase project used by the production auth environment. The migration creates
-one versioned JSON state row per user, enables row-level security, grants no
-anonymous access, and limits authenticated reads and writes to
-`auth.uid() = user_id`. Account deletion removes the state row through the
-foreign-key cascade.
+Deliver `supabase/migrations/20260719012231_account_state_sync.sql` through the
+main-branch Supabase Migrations CD workflow to the same Supabase project used by
+production auth. The migration creates one versioned JSON state row per user,
+enables row-level security, grants no anonymous access, and limits authenticated
+reads and writes to `auth.uid() = user_id`. Account deletion removes the state row
+through the foreign-key cascade.
 
-Before deploying the judge reliability change, also apply
-`supabase/migrations/20260720065000_judgment_idempotency.sql`. It adds the
-server-only judgment claim/result cache, the per-attempt authenticated activity
-ledger, and the `judge.reused` observability event.
+Before deploying the judge reliability change, configure the GitHub Supabase
+migration pipeline in [docs/SUPABASE_MIGRATIONS.md](docs/SUPABASE_MIGRATIONS.md).
+The main-branch CD workflow, never a developer machine or agent tool, applies
+`supabase/migrations/20260720065000_judgment_idempotency.sql`. It adds the server-only
+judgment claim/result cache, the per-attempt authenticated activity ledger, and the
+`judge.reused` observability event.
 The exact rollout and verification sequence is in
 [docs/JUDGE_RELIABILITY.md](docs/JUDGE_RELIABILITY.md).
 

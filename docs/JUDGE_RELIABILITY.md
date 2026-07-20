@@ -77,14 +77,17 @@ debugging.
 
 ## Production rollout order
 
-1. Apply `20260720065000_judgment_idempotency.sql` to the production Supabase
-   project before deploying the application commit.
-2. Confirm the server environment contains the documented variable names without
+1. Configure the GitHub `production` environment and required Supabase secrets
+   described in `SUPABASE_MIGRATIONS.md`.
+2. Merge only after `Supabase migration dry-run` passes. The main-branch
+   `Supabase Migrations CD` workflow must apply
+   `20260720065000_judgment_idempotency.sql`; do not apply it manually.
+3. Confirm the server environment contains the documented variable names without
    printing their values.
-3. Deploy and filter logs for one controlled attempt ID.
-4. Complete one normal result and retry the identical signed request. Confirm one
+4. Deploy and filter logs for one controlled attempt ID.
+5. Complete one normal result and retry the identical signed request. Confirm one
    `judge.completed`, one `judge.reused`, and only one provider operation.
-5. Exercise a controlled mocked/staging timeout or provider error. Confirm no score,
+6. Exercise a controlled mocked/staging timeout or provider error. Confirm no score,
    no XP, preserved transcript, typed UI copy, and a working retry.
-6. Confirm `rizzcode_judgments` and `rizzcode_conversation_events` are inaccessible
+7. Confirm `rizzcode_judgments` and `rizzcode_conversation_events` are inaccessible
    to `anon` and `authenticated` browser roles.

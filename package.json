@@ -6,6 +6,7 @@
   "scripts": {
     "brand:assets": "node scripts/build-brand-assets.mjs",
     "check:brand": "node scripts/check-brand-system.mjs",
+    "check:migrations": "node scripts/check-supabase-migration-versions.mjs",
     "prebuild": "npm run brand:assets",
     "dev": "next dev --hostname 127.0.0.1 --port ${PORT:-4173}",
     "build": "next build",
@@ -14,7 +15,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:live-judge": "tsx server/judge/liveSmoke.ts",
-    "check": "tsc --noEmit && npm run check:brand"
+    "check": "tsc --noEmit && npm run check:brand && npm run check:migrations"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.0",
