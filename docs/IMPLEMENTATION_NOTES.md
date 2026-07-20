@@ -45,6 +45,13 @@ The judge server:
 11. Recalculates raw score, caps, final score, and verdict.
 12. Leaves XP calculation to the application domain.
 
+Before the provider call, the server claims a transcript-bound attempt ID in
+`public.rizzcode_judgments`. Concurrent duplicates return a typed in-progress state.
+A completed duplicate reuses the persisted, revalidated result without another model
+call. Invalid output and terminal provider failures release the claim so explicit
+retry can recover. See [JUDGE_RELIABILITY.md](JUDGE_RELIABILITY.md) for the acceptance
+matrix and rollout order.
+
 Neither provider has tools, browsing, memory, or client credential access. A
 logical judgment operation performs one request and at most one transient
 retry. An explicit UI retry starts a new operation over immutable responses.
@@ -56,6 +63,10 @@ result/error details. Signed-in requests attach the verified Supabase user ID;
 guest attempts remain anonymous. The table is RLS-protected and grants no
 browser-role access. Idle prepared drafts are excluded because they were never
 sent.
+
+`judge.reused` distinguishes a cached idempotent recovery from a new provider
+operation. Provider errors are classified by typed SDK/Zod errors and status codes,
+not message-text guessing.
 
 ## Practice state and races
 
@@ -111,7 +122,8 @@ demo leaderboard calculation.
 
 ## Persistence boundary
 
-Profile, progress, attempts, and private milestones use versioned local storage.
+Profile, progress, attempts, practice activity, and private milestones use versioned
+local storage.
 Active canonical persona conversations use a six-hour signed receipt returned
 after every completed turn. The receipt is verified server-side and restores
 the exact transcript on another serverless instance. A bounded process-local
@@ -121,6 +133,12 @@ prepared draft, but cache loss is no longer a correctness failure.
 `RIZZCODE_SESSION_SECRET` can provide a dedicated signing secret. If omitted,
 the server derives a domain-separated signing key from `OPENAI_API_KEY`.
 Neither secret is returned to or referenced by client code.
+
+Completed judgment activity uses a separate attempt-ID ledger grouped by the local
+calendar date captured at completion. Guest entries merge into a dedicated
+RLS-protected Supabase table without double-counting and remain available across
+signed-in devices.
+See [PRACTICE_ACTIVITY.md](PRACTICE_ACTIVITY.md).
 
 ## Test boundary
 

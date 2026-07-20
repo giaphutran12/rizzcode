@@ -55,6 +55,21 @@ test("first visit to judged in-person result, XP, and returning refresh", async 
   await expect(page.getByText("1/67")).toBeVisible();
   await page.reload();
   await expect(page.getByText("1/67")).toBeVisible();
+
+  await page.goto("/progress");
+  await expect(page.getByText("1 completed rep shown")).toBeVisible();
+  const activityRegion = page.getByRole("region", {
+    name: /activity calendar/i,
+  });
+  await expect(activityRegion).toBeVisible();
+  const scrollPosition = await activityRegion.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollLeft: element.scrollLeft,
+    scrollWidth: element.scrollWidth,
+  }));
+  if (scrollPosition.scrollWidth > scrollPosition.clientWidth) {
+    expect(scrollPosition.scrollLeft).toBeGreaterThan(0);
+  }
 });
 
 test("messaging mode, unknown routes, and narrow-screen containment", async ({
@@ -117,8 +132,9 @@ test("judge failure preserves the transcript and offers retry", async ({
       await expect(page.getByText("Your turn")).toBeVisible();
     }
   }
-  await expect(page.getByText("Judgment did not land.")).toBeVisible();
+  await expect(page.getByText("The judge is offline.")).toBeVisible();
   await expect(page.getByText("Simulated provider outage.")).toBeVisible();
+  await expect(page.getByText("Error code: judge_unavailable")).toBeVisible();
   await expect(page.getByText("That delay board is optimistic.")).toBeVisible();
   await expect(
     page.getByRole("button", { name: /retry judgment/i }),

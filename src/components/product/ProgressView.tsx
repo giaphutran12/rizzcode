@@ -7,7 +7,13 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import {
+  ActivityContributionGraph,
+  BrandKicker,
+  BrandSurface,
+} from "@/design-system";
 import { useRizzCode } from "../../context/RizzCodeContext";
+import { buildActivityCalendar } from "../../domain/activity";
 import type { MilestoneId } from "../../domain/types";
 import { getSideQuest } from "../../data/sideQuests";
 import { modules, scenarios } from "../../data/scenarios";
@@ -27,12 +33,14 @@ export function ProgressView() {
   const {
     profile,
     progress,
+    activity,
     milestones,
     toggleMilestone,
     resetProgress,
   } = useRizzCode();
   const [copied, setCopied] = useState(false);
   const quest = getSideQuest(profile.onboardingPlan.sideQuestId);
+  const activityCalendar = buildActivityCalendar(activity);
 
   async function copyPrompt() {
     try {
@@ -52,7 +60,11 @@ export function ProgressView() {
           className="rizz-text-button rizz-text-button--danger"
           type="button"
           onClick={() => {
-            if (window.confirm("Reset all local RizzCode progress?")) {
+            if (
+              window.confirm(
+                "Reset all RizzCode progress on this device and synced account?",
+              )
+            ) {
               resetProgress();
             }
           }}
@@ -76,6 +88,23 @@ export function ProgressView() {
           <strong>{progress.streak} days</strong>
         </div>
       </section>
+
+      <BrandSurface className="rizz-activity-panel">
+        <header>
+          <div>
+            <BrandKicker>Practice activity</BrandKicker>
+            <h2>Build the reps.</h2>
+          </div>
+          <p>
+            Each square is a local calendar day. More completed judgments mean
+            more intensity. Failed judgments never count.
+          </p>
+        </header>
+        <ActivityContributionGraph
+          weeks={activityCalendar.weeks}
+          total={activityCalendar.total}
+        />
+      </BrandSurface>
 
       <section className="rizz-progress-grid">
         <article className="rizz-progress-panel">

@@ -50,5 +50,7 @@ export const localAccountKeys = [
   "rizzcode.v1.profile",
   "rizzcode.v1.progress",
   "rizzcode.v1.attempts",
+  "rizzcode.v1.activity",
   "rizzcode.v1.milestones",
+  "rizzcode.v1.owner",
 ] as const;

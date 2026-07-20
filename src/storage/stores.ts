@@ -1,9 +1,14 @@
 import { z } from "zod";
 import { defaultProfile } from "../domain/onboarding";
 import { defaultMilestones, defaultProgress } from "../domain/progression";
+import {
+  activityFromAttempts,
+  mergeActivityEntries,
+} from "../domain/activity";
 import type {
   Attempt,
   Milestones,
+  PracticeActivityEntry,
   Progress,
   UserProfile,
 } from "../domain/types";
@@ -12,8 +17,29 @@ export const STORAGE_KEYS = {
   profile: "rizzcode.v1.profile",
   progress: "rizzcode.v1.progress",
   attempts: "rizzcode.v1.attempts",
+  activity: "rizzcode.v1.activity",
   milestones: "rizzcode.v1.milestones",
+  owner: "rizzcode.v1.owner",
 } as const;
+
+export type LocalRecordsOwner = "guest" | string;
+
+export function loadRecordsOwner(): LocalRecordsOwner | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEYS.owner);
+  } catch {
+    return null;
+  }
+}
+
+export function writeRecordsOwner(owner: LocalRecordsOwner): string | undefined {
+  try {
+    window.localStorage.setItem(STORAGE_KEYS.owner, owner);
+    return undefined;
+  } catch {
+    return "Progress ownership could not be saved on this device.";
+  }
+}
 
 const growthDirectionSchema = z.object({
   quality: z.string(),
@@ -116,8 +142,20 @@ export const attemptSchema = z
       terminal: z.boolean(),
     }),
     startedAt: z.string(),
+    completedAt: z.string().optional(),
+    completedLocalDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
   })
   .passthrough();
+
+export const activityEntrySchema = z.object({
+  attemptId: z.string().min(1).max(120),
+  scenarioId: z.string().min(1).max(120),
+  completedAt: z.string().datetime(),
+  localDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
 
 type LoadResult<T> = {
   value: T;
@@ -128,6 +166,7 @@ export type PersistedRecords = {
   profile: UserProfile;
   progress: Progress;
   attempts: Attempt[];
+  activity: PracticeActivityEntry[];
   milestones: Milestones;
 };
 
@@ -135,6 +174,7 @@ const persistedRecordsSchema = z.object({
   profile: profileSchema,
   progress: progressSchema,
   attempts: z.array(attemptSchema),
+  activity: z.array(activityEntrySchema).optional(),
   milestones: milestonesSchema,
 });
 
@@ -142,7 +182,16 @@ export function parsePersistedRecords(
   value: unknown,
 ): PersistedRecords | null {
   const result = persistedRecordsSchema.safeParse(value);
-  return result.success ? (result.data as PersistedRecords) : null;
+  if (!result.success) return null;
+  const attempts = result.data.attempts as Attempt[];
+  return {
+    ...result.data,
+    attempts,
+    activity: mergeActivityEntries(
+      result.data.activity ?? [],
+      activityFromAttempts(attempts),
+    ),
+  } as PersistedRecords;
 }
 
 function readRecord<T>(
@@ -202,15 +251,26 @@ export function loadAllRecords(): PersistedRecords & { warning?: string } {
     milestonesSchema,
     defaultMilestones,
   );
+  const activity = readRecord(
+    STORAGE_KEYS.activity,
+    z.array(activityEntrySchema),
+    [],
+  );
+  const normalizedActivity = mergeActivityEntries(
+    activity.value,
+    activityFromAttempts(attempts.value as Attempt[]),
+  );
   return {
     profile: profile.value,
     progress: progress.value,
     attempts: attempts.value as Attempt[],
+    activity: normalizedActivity,
     milestones: milestones.value,
     warning:
       profile.warning ??
       progress.warning ??
       attempts.warning ??
+      activity.warning ??
       milestones.warning,
   };
 }
@@ -220,6 +280,7 @@ export function writeAllRecords(records: PersistedRecords): string | undefined {
     [STORAGE_KEYS.profile, records.profile],
     [STORAGE_KEYS.progress, records.progress],
     [STORAGE_KEYS.attempts, records.attempts],
+    [STORAGE_KEYS.activity, records.activity],
     [STORAGE_KEYS.milestones, records.milestones],
   ] as const) {
     const warning = writeRecord(key, value);
@@ -229,7 +290,10 @@ export function writeAllRecords(records: PersistedRecords): string | undefined {
 }
 
 export function writeRecord(
-  key: (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS],
+  key: Exclude<
+    (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS],
+    typeof STORAGE_KEYS.owner
+  >,
   value: unknown,
 ): string | undefined {
   try {

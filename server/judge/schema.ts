@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { MAX_RESPONSE_LENGTH } from "../../src/domain/constants";
+import { OUTCOME_LABELS } from "../../src/domain/constants";
+import type { OutcomeCode } from "../../src/domain/types";
 import { ConversationTurnSchema } from "../persona/schema";
+
+const OutcomeCodeSchema = z.enum(
+  Object.keys(OUTCOME_LABELS) as [OutcomeCode, ...OutcomeCode[]],
+);
 
 export const EvidenceSchema = z.object({
   turn: ConversationTurnSchema,
@@ -29,22 +35,7 @@ export const JudgeModelDraftSchema = z.object({
   improve: z.array(z.string().min(1).max(280)).min(1).max(3),
   betterResponse: z.string().min(1).max(MAX_RESPONSE_LENGTH),
   outcome: z.object({
-    code: z.enum([
-      "conversation_continues",
-      "shared_interest",
-      "mutual_enjoyment",
-      "contact_exchanged",
-      "date_invited",
-      "date_agreed",
-      "graceful_exit",
-      "low_interest",
-      "incompatible",
-      "boundary_respected",
-      "boundary_crossed",
-      "repair_successful",
-      "support_offered",
-      "logistics_resolved",
-    ]),
+    code: OutcomeCodeSchema,
     label: z.string().min(1).max(120),
     confidence: z.enum(["low", "medium", "high"]),
     basis: z.array(EvidenceSchema).min(1).max(3),

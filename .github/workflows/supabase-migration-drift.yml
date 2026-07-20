@@ -1,0 +1,129 @@
+name: Supabase Migration Drift Alarm
+
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-drift:
+    name: Check migration drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.84.2
+
+      - name: Assert required secrets exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          for var in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            if [ -z "${!var:-}" ]; then
+              echo "::error::Missing required GitHub Actions secret: ${var}"
+              exit 1
+            fi
+          done
+
+      - name: Link production project
+        run: >-
+          supabase link
+          --project-ref "$SUPABASE_PROJECT_REF"
+          --password "$SUPABASE_DB_PASSWORD"
+          --yes
+
+      - name: Detect migration history drift
+        id: drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          raw=$(supabase migration list --linked --password "$SUPABASE_DB_PASSWORD")
+          echo "$raw"
+
+          drift=$(printf '%s\n' "$raw" | awk -F'|' '
+            /^[[:space:]]*Local[[:space:]]*\|/ { next }
+            /-+\|/ { next }
+            NF >= 3 {
+              local_version = $1
+              remote_version = $2
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", local_version)
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", remote_version)
+              if ((local_version == "") != (remote_version == "")) print
+            }
+          ')
+
+          if [ -z "$drift" ]; then
+            echo "has_drift=false" >> "$GITHUB_OUTPUT"
+            echo "No migration drift detected."
+            exit 0
+          fi
+
+          delimiter=$(openssl rand -hex 8)
+          {
+            echo "has_drift=true"
+            echo "details<<${delimiter}"
+            echo "$drift"
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
+          echo "::error::Supabase migration drift detected."
+
+      - name: Open or update drift issue
+        if: steps.drift.outputs.has_drift == 'true'
+        env:
+          DRIFT_DETAILS: ${{ steps.drift.outputs.details }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Supabase migration drift detected"
+          body=$(printf '%s\n\nProject: `%s`\n\n```\n%s\n```\n\nDo not repair or push from a developer machine. Reconcile the repository receipt through a reviewed PR.' \
+            "$title" "$SUPABASE_PROJECT_REF" "$DRIFT_DETAILS")
+
+          existing=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --search "$title in:title" \
+            --limit 1 \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi
+
+      - name: Fail when drift exists
+        if: steps.drift.outputs.has_drift == 'true'
+        run: exit 1
+
+      - name: Write workflow summary
+        if: always()
+        env:
+          DRIFT_DETAILS: ${{ steps.drift.outputs.details }}
+        run: |
+          if [ "${{ steps.drift.outputs.has_drift }}" = "true" ]; then
+            {
+              echo "## Supabase migration drift detected"
+              echo
+              echo '```'
+              echo "$DRIFT_DETAILS"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## No Supabase migration drift" >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -23,3 +23,13 @@ motif replaces the master logo.
 RizzCode is direct, grounded, playful, and respectful. It teaches conversational
 skill through realistic reps. It does not coach manipulation, sexual pressure,
 pickup tactics, or fake personas.
+
+## Database migrations
+
+Never apply a remote Supabase migration from a developer machine, agent tool,
+Dashboard SQL editor, or Table Editor. All remote schema changes must be committed
+under `supabase/migrations/`, pass the pull-request migration dry-run, and be applied
+by the main-branch Supabase Migrations CD workflow.
+
+Do not use `supabase db push --include-all` or `supabase migration repair` unless a
+separate, reviewed incident-recovery change explicitly authorizes the exact versions.

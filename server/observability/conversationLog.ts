@@ -11,7 +11,8 @@ export type ConversationEvent = {
     | "persona.provider.failed"
     | "judge.started"
     | "judge.completed"
-    | "judge.failed";
+    | "judge.failed"
+    | "judge.reused";
   attemptId: string;
   scenarioId: string;
   model: string;

@@ -38,6 +38,8 @@ import { BrandButton, BrandLogo, RizzMeter } from "@/design-system";
   FUMBLED, COOKED, or ATE verdicts
 - Likely simulated outcomes, improved-response coaching, XP, levels, streaks,
   personal bests, achievements, and recommended next reps
+- A 53-week contribution graph of completed judgments, grouped by captured local
+  calendar date with accessible count labels and 0/1/2/3/4+ intensity
 - Demo leaderboard choice A using practice XP only
 - Private self-reported real-world milestones that add zero public XP
 - Versioned local persistence, isolated corrupt-record recovery, storage
@@ -52,6 +54,10 @@ import { BrandButton, BrandLogo, RizzMeter } from "@/design-system";
   navigation
 - Guest reps, XP, attempts, profile, and milestones merge into the account on
   first login, then sync across signed-in devices
+- Guest activity merges by attempt ID without double-counting; signed-in activity
+  remains in a dedicated RLS-protected per-attempt ledger across devices
+- Transcript-bound judgment idempotency prevents duplicate provider calls and lets a
+  lost-response retry reuse the validated server result
 
 The historical `/control` and `/compare` prototype routes remain available as
 visual references. They are not the production product path.
@@ -136,12 +142,21 @@ newer local work.
 
 ### Enable account progress sync
 
-Apply `supabase/migrations/20260719012231_account_state_sync.sql` to the same
-Supabase project used by the production auth environment. The migration creates
-one versioned JSON state row per user, enables row-level security, grants no
-anonymous access, and limits authenticated reads and writes to
-`auth.uid() = user_id`. Account deletion removes the state row through the
-foreign-key cascade.
+Deliver `supabase/migrations/20260719012231_account_state_sync.sql` through the
+main-branch Supabase Migrations CD workflow to the same Supabase project used by
+production auth. The migration creates one versioned JSON state row per user,
+enables row-level security, grants no anonymous access, and limits authenticated
+reads and writes to `auth.uid() = user_id`. Account deletion removes the state row
+through the foreign-key cascade.
+
+Before deploying the judge reliability change, configure the GitHub Supabase
+migration pipeline in [docs/SUPABASE_MIGRATIONS.md](docs/SUPABASE_MIGRATIONS.md).
+The main-branch CD workflow, never a developer machine or agent tool, applies
+`supabase/migrations/20260720065000_judgment_idempotency.sql`. It adds the server-only
+judgment claim/result cache, the per-attempt authenticated activity ledger, and the
+`judge.reused` observability event.
+The exact rollout and verification sequence is in
+[docs/JUDGE_RELIABILITY.md](docs/JUDGE_RELIABILITY.md).
 
 For production email delivery, configure custom SMTP in Supabase. The built-in
 mailer is rate-limited and intended for initial testing.
@@ -161,6 +176,7 @@ every judge operation. In Vercel Runtime Logs, filter for
 - `judge.started`
 - `judge.completed`
 - `judge.failed`
+- `judge.reused`
 
 Events include the canonical transcript, scenario, model, persona state,
 fallback status, parsed model result when available, and bounded validation

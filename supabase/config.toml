@@ -1,0 +1,11 @@
+# Local Supabase CLI identity. Remote project coordinates are supplied only by
+# GitHub Actions secrets in the migration CI/CD workflows.
+project_id = "rizzcode"
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = false
+sql_paths = []

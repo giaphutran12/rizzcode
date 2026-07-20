@@ -1,11 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Attempt, Progress } from "../domain/types";
+import type {
+  Attempt,
+  PracticeActivityEntry,
+  Progress,
+} from "../domain/types";
+import { mergeActivityEntries } from "../domain/activity";
 import {
+  activityEntrySchema,
   parsePersistedRecords,
   type PersistedRecords,
 } from "./stores";
 
 const ACCOUNT_STATE_TABLE = "rizzcode_user_state";
+const ACCOUNT_ACTIVITY_TABLE = "rizzcode_practice_activity";
 
 function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
@@ -98,6 +105,7 @@ export function mergeAccountRecords(
       : local.profile,
     progress: mergeProgress(local.progress, remote.progress),
     attempts: mergeAttempts(local.attempts, remote.attempts),
+    activity: mergeActivityEntries(remote.activity, local.activity),
     milestones: {
       version: 1,
       earned: unique([
@@ -138,5 +146,57 @@ export async function saveAccountRecords(
     },
     { onConflict: "user_id" },
   );
+  if (error) throw error;
+}
+
+export async function loadAccountActivity(
+  client: SupabaseClient,
+  userId: string,
+): Promise<PracticeActivityEntry[]> {
+  const { data, error } = await client
+    .from(ACCOUNT_ACTIVITY_TABLE)
+    .select("attempt_id, scenario_id, completed_at, local_date")
+    .eq("user_id", userId)
+    .order("completed_at", { ascending: true });
+  if (error) throw error;
+  const entries = (data ?? []).flatMap((row) => {
+    const parsed = activityEntrySchema.safeParse({
+      attemptId: row.attempt_id,
+      scenarioId: row.scenario_id,
+      completedAt: row.completed_at,
+      localDate: row.local_date,
+    });
+    return parsed.success ? [parsed.data] : [];
+  });
+  return mergeActivityEntries(entries);
+}
+
+export async function saveAccountActivity(
+  client: SupabaseClient,
+  userId: string,
+  activity: readonly PracticeActivityEntry[],
+): Promise<void> {
+  if (activity.length === 0) return;
+  const { error } = await client.from(ACCOUNT_ACTIVITY_TABLE).upsert(
+    activity.map((entry) => ({
+      user_id: userId,
+      attempt_id: entry.attemptId,
+      scenario_id: entry.scenarioId,
+      completed_at: entry.completedAt,
+      local_date: entry.localDate,
+    })),
+    { onConflict: "user_id,attempt_id" },
+  );
+  if (error) throw error;
+}
+
+export async function clearAccountActivity(
+  client: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const { error } = await client
+    .from(ACCOUNT_ACTIVITY_TABLE)
+    .delete()
+    .eq("user_id", userId);
   if (error) throw error;
 }

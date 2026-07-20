@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { JudgeRequest } from "../../src/domain/types";
 import {
   fixturePersonaProvider,
@@ -8,6 +8,13 @@ import { PersonaConversationStore } from "../persona/store";
 import type { JudgeProvider } from "./provider";
 import { fixtureJudgeProvider } from "./provider";
 import { judgeAttempt } from "./service";
+import {
+  MemoryJudgmentStore,
+  type JudgmentClaim,
+  type JudgmentStore,
+  type JudgmentStoreKey,
+} from "./store";
+import type { JudgeResult } from "../../src/domain/types";
 
 const inPersonRequest: JudgeRequest = {
   schemaVersion: "1.0" as const,
@@ -50,7 +57,9 @@ async function judgeStoredAttempt(
   provider: JudgeProvider = fixtureJudgeProvider,
 ) {
   const store = await seedConversation(request);
-  return judgeAttempt(request, provider, store);
+  return judgeAttempt(request, provider, store, {
+    judgmentStore: new MemoryJudgmentStore(),
+  });
 }
 
 describe("judge service integration", () => {
@@ -279,8 +288,19 @@ describe("judge service integration", () => {
   it("returns a clear setup state when the server key is missing", async () => {
     const previous = process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_API_KEY;
-    const response = await judgeAttempt(inPersonRequest);
-    if (previous) process.env.OPENAI_API_KEY = previous;
+    const conversation = await seedConversation(inPersonRequest);
+    let response;
+    try {
+      response = await judgeAttempt(
+        inPersonRequest,
+        undefined,
+        conversation,
+        { judgmentStore: new MemoryJudgmentStore() },
+      );
+    } finally {
+      if (previous) process.env.OPENAI_API_KEY = previous;
+      else delete process.env.OPENAI_API_KEY;
+    }
     expect(response).toMatchObject({
       ok: false,
       code: "judge_unconfigured",
@@ -329,6 +349,156 @@ describe("judge service integration", () => {
       code: "judge_invalid_output",
     });
     expect(response).not.toHaveProperty("result");
+  });
+
+  it("reuses a completed judgment for the same immutable attempt", async () => {
+    const conversation = await seedConversation(inPersonRequest);
+    const judgmentStore = new MemoryJudgmentStore();
+    const provider: JudgeProvider = {
+      evaluate: vi.fn((input) => fixtureJudgeProvider.evaluate(input)),
+    };
+
+    const first = await judgeAttempt(
+      inPersonRequest,
+      provider,
+      conversation,
+      { judgmentStore },
+    );
+    const duplicate = await judgeAttempt(
+      inPersonRequest,
+      provider,
+      conversation,
+      { judgmentStore },
+    );
+
+    expect(first.ok).toBe(true);
+    expect(duplicate).toEqual(first);
+    expect(provider.evaluate).toHaveBeenCalledOnce();
+  });
+
+  it("reports an in-flight duplicate without starting a second model call", async () => {
+    const conversation = await seedConversation(inPersonRequest);
+    const judgmentStore = new MemoryJudgmentStore();
+    let finishProvider!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      finishProvider = resolve;
+    });
+    const provider: JudgeProvider = {
+      evaluate: vi.fn(async (input) => {
+        await gate;
+        return fixtureJudgeProvider.evaluate(input);
+      }),
+    };
+
+    const first = judgeAttempt(inPersonRequest, provider, conversation, {
+      judgmentStore,
+    });
+    await vi.waitFor(() => expect(provider.evaluate).toHaveBeenCalledOnce());
+    const duplicate = await judgeAttempt(
+      inPersonRequest,
+      provider,
+      conversation,
+      { judgmentStore },
+    );
+
+    expect(duplicate).toMatchObject({
+      ok: false,
+      code: "judge_in_progress",
+      retryable: true,
+    });
+    expect(provider.evaluate).toHaveBeenCalledOnce();
+    finishProvider();
+    await expect(first).resolves.toMatchObject({ ok: true });
+  });
+
+  it("releases a claim after result persistence fails so retry can start immediately", async () => {
+    const conversation = await seedConversation(inPersonRequest);
+    const memory = new MemoryJudgmentStore();
+    let failCompletion = true;
+    const judgmentStore: JudgmentStore = {
+      claim(key: JudgmentStoreKey): Promise<JudgmentClaim> {
+        return memory.claim(key);
+      },
+      async complete(
+        key: JudgmentStoreKey,
+        claimToken: string,
+        result: JudgeResult,
+      ) {
+        if (failCompletion) {
+          failCompletion = false;
+          throw new Error("database write unavailable");
+        }
+        await memory.complete(key, claimToken, result);
+      },
+      release: (key, claimToken) => memory.release(key, claimToken),
+      invalidateCompleted: (key) => memory.invalidateCompleted(key),
+    };
+    const provider: JudgeProvider = {
+      evaluate: vi.fn((input) => fixtureJudgeProvider.evaluate(input)),
+    };
+
+    const failed = await judgeAttempt(
+      inPersonRequest,
+      provider,
+      conversation,
+      { judgmentStore },
+    );
+    const retried = await judgeAttempt(
+      inPersonRequest,
+      provider,
+      conversation,
+      { judgmentStore },
+    );
+
+    expect(failed).toMatchObject({ ok: false, code: "judge_unavailable" });
+    expect(retried).toMatchObject({ ok: true });
+    expect(provider.evaluate).toHaveBeenCalledTimes(2);
+  });
+
+  it("maps timeout, rate limit, and provider auth failures explicitly", async () => {
+    const timeoutProvider: JudgeProvider = {
+      evaluate: vi.fn(async () => {
+        throw Object.assign(new Error("deadline"), { name: "TimeoutError" });
+      }),
+    };
+    const timeout = await judgeStoredAttempt(
+      { ...inPersonRequest, attemptId: "attempt-timeout" },
+      timeoutProvider,
+    );
+    expect(timeout).toMatchObject({ ok: false, code: "judge_timeout" });
+    expect(timeoutProvider.evaluate).toHaveBeenCalledTimes(2);
+
+    const rateProvider: JudgeProvider = {
+      evaluate: vi.fn(async () => {
+        throw Object.assign(new Error("busy"), { statusCode: 429 });
+      }),
+    };
+    const rateLimited = await judgeStoredAttempt(
+      { ...inPersonRequest, attemptId: "attempt-rate" },
+      rateProvider,
+    );
+    expect(rateLimited).toMatchObject({
+      ok: false,
+      code: "judge_rate_limited",
+    });
+    expect(rateProvider.evaluate).toHaveBeenCalledTimes(2);
+
+    const authProvider: JudgeProvider = {
+      evaluate: vi.fn(async () => {
+        throw Object.assign(new Error("provider rejected credentials"), {
+          statusCode: 401,
+        });
+      }),
+    };
+    const unconfigured = await judgeStoredAttempt(
+      { ...inPersonRequest, attemptId: "attempt-auth" },
+      authProvider,
+    );
+    expect(unconfigured).toMatchObject({
+      ok: false,
+      code: "judge_unconfigured",
+    });
+    expect(authProvider.evaluate).toHaveBeenCalledOnce();
   });
 
   it("rejects a transcript that is not the server-owned conversation", async () => {

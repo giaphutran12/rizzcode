@@ -1,7 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { JudgeRequestSchema } from "./schema";
+import { OUTCOME_LABELS } from "../../src/domain/constants";
+import { JudgeModelDraftSchema, JudgeRequestSchema } from "./schema";
 
 describe("judge request boundary", () => {
+  it("accepts every outcome in the canonical catalog", () => {
+    for (const code of Object.keys(OUTCOME_LABELS)) {
+      const parsed = JudgeModelDraftSchema.safeParse({
+        rubric: [
+          "context_naturalness",
+          "reciprocity_listening",
+          "playfulness_personality",
+          "respect_calibration",
+          "challenge_objective",
+        ].map((id) => ({
+          id,
+          score: 1,
+          evidence: { turn: 1, excerpt: "Hello", reason: "Exact line." },
+          feedback: "Clear evidence.",
+        })),
+        worked: ["One strength"],
+        improve: ["One improvement"],
+        betterResponse: "Hello there.",
+        outcome: {
+          code,
+          label: OUTCOME_LABELS[code as keyof typeof OUTCOME_LABELS],
+          confidence: "medium",
+          basis: [{ turn: 1, excerpt: "Hello", reason: "Exact line." }],
+        },
+      });
+      expect(parsed.success, code).toBe(true);
+    }
+  });
   it("rejects client-supplied score, XP, gates, and outcomes", () => {
     const parsed = JudgeRequestSchema.safeParse({
       schemaVersion: "1.0",

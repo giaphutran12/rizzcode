@@ -216,6 +216,7 @@ export type PersonaPrepareApiResponse =
 
 export type JudgeErrorCode =
   | "judge_unconfigured"
+  | "judge_in_progress"
   | "judge_timeout"
   | "judge_rate_limited"
   | "judge_invalid_output"
@@ -253,6 +254,14 @@ export interface Attempt {
   isPersonalBest?: boolean;
   startedAt: string;
   completedAt?: string;
+  completedLocalDate?: string;
+}
+
+export interface PracticeActivityEntry {
+  attemptId: string;
+  scenarioId: string;
+  completedAt: string;
+  localDate: string;
 }
 
 export interface GrowthDirection {

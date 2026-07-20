@@ -1359,6 +1359,14 @@
   font-size: 12px;
 }
 
+.rizz-judge-error small {
+  display: block;
+  margin-top: var(--rc-space-2);
+  color: var(--rc-text-secondary);
+  font-family: var(--rc-font-mono);
+  font-size: var(--rc-type-label);
+}
+
 /* Results */
 .rizz-result {
   border: 1px solid var(--ink);
@@ -1632,6 +1640,34 @@
   margin: 0 auto 28px;
   border-top: 1px solid var(--ink);
   border-left: 1px solid var(--ink);
+}
+
+.rizz-activity-panel {
+  width: min(var(--rc-content-wide), calc(100% - var(--rc-space-8)));
+  margin: 0 auto var(--rc-space-8);
+  padding: clamp(var(--rc-space-6), 4vw, var(--rc-space-12));
+  background: var(--rc-surface-raised);
+}
+
+.rizz-activity-panel > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--rc-space-8);
+  margin-bottom: var(--rc-space-8);
+}
+
+.rizz-activity-panel h2 {
+  margin: 0;
+  font-size: var(--rc-type-title-sm);
+  letter-spacing: var(--rc-tracking-tight);
+}
+
+.rizz-activity-panel > header > p {
+  max-width: var(--rc-content-reading);
+  margin: 0;
+  color: var(--rc-text-secondary);
+  line-height: var(--rc-leading-body);
 }
 
 .rizz-progress-panel {
@@ -1956,7 +1992,8 @@
   }
 
   .rizz-module > header,
-  .rizz-private-milestones > header {
+  .rizz-private-milestones > header,
+  .rizz-activity-panel > header {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -2090,6 +2127,7 @@
   .rizz-briefing,
   .rizz-practice,
   .rizz-result,
+  .rizz-activity-panel,
   .rizz-progress-hero,
   .rizz-progress-grid,
   .rizz-private-milestones,
