@@ -20,6 +20,20 @@ This is the source of truth for the RizzCode product and the implementation hand
 It is intentionally written so that an implementation agent can build the product
 without reopening product questions.
 
+## Launch reliability amendment · July 20, 2026
+
+Official judgments are idempotent by attempt ID plus canonical transcript. A retry of
+a completed operation reuses the persisted validated result, while a concurrent
+duplicate cannot start another provider call. Failure remains unscored and visible.
+The acceptance contract and production rollout are documented in
+[JUDGE_RELIABILITY.md](JUDGE_RELIABILITY.md).
+
+The Progress surface includes a 53-week contribution graph. Activity means completed
+schema-validated practice judgments grouped by the user's captured local calendar
+date. Guest activity persists locally and merges into authenticated Supabase account
+state by attempt ID without double-counting. See
+[PRACTICE_ACTIVITY.md](PRACTICE_ACTIVITY.md).
+
 ## Instructions to the implementation agent
 
 Read this entire file before editing code.
@@ -809,6 +823,7 @@ export interface JudgeRequest {
     turn: 1 | 2 | 3 | 4 | 5 | 6;
     body: string;
   }>;
+  sessionToken?: string;
 }
 ```
 
@@ -824,6 +839,7 @@ export type JudgeApiResponse =
         | "judge_unconfigured"
         | "judge_timeout"
         | "judge_rate_limited"
+        | "judge_in_progress"
         | "judge_invalid_output"
         | "judge_unavailable";
       message: string;

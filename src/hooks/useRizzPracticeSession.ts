@@ -36,6 +36,7 @@ import {
   userResponses,
   validateResponse,
 } from "../engine/conversationEngine";
+import { localDateKey } from "../domain/activity";
 
 type JudgmentReceipt = {
   xpDelta: number;
@@ -170,9 +171,11 @@ export function useRizzPracticeSession(scenario: Scenario) {
         return;
       }
 
+      const completedAt = new Date();
       const judgmentReceipt = recordJudgment(
         pendingAttempt,
         apiResult.result,
+        completedAt,
       );
       const complete: Attempt = {
         ...judgingAttempt,
@@ -180,7 +183,8 @@ export function useRizzPracticeSession(scenario: Scenario) {
         result: apiResult.result,
         xpAwarded: judgmentReceipt.xpDelta,
         isPersonalBest: judgmentReceipt.isPersonalBest,
-        completedAt: new Date().toISOString(),
+        completedAt: completedAt.toISOString(),
+        completedLocalDate: localDateKey(completedAt),
       };
       setReceipt(judgmentReceipt);
       commitAttempt(complete);

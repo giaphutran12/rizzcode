@@ -1,4 +1,5 @@
 import { scenarios } from "../data/scenarios";
+import { localDateKey } from "./activity";
 import type {
   Attempt,
   Difficulty,
@@ -127,7 +128,7 @@ export function applyJudgment(input: {
   const isPersonalBest =
     isValidCompletion && result.finalScore > previousBestScore;
   const nextMastery = masteryXP(result.finalScore, scenario.difficulty);
-  const today = input.today ?? new Date().toISOString().slice(0, 10);
+  const today = input.today ?? localDateKey();
   const nextStreak =
     progress.lastPracticeDate === today
       ? progress.streak

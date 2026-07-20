@@ -73,6 +73,7 @@ export const JudgeApiResponseSchema = z.discriminatedUnion("ok", [
     retryable: z.boolean(),
     code: z.enum([
       "judge_unconfigured",
+      "judge_in_progress",
       "judge_timeout",
       "judge_rate_limited",
       "judge_invalid_output",

@@ -20,7 +20,11 @@ import {
   MIN_CONVERSATION_TURNS,
 } from "../../domain/constants";
 import { nextPracticeScenario } from "../../domain/progression";
-import type { JudgeResult, Scenario } from "../../domain/types";
+import type {
+  JudgeErrorCode,
+  JudgeResult,
+  Scenario,
+} from "../../domain/types";
 import { useRizzPracticeSession } from "../../hooks/useRizzPracticeSession";
 import {
   DifficultyBadge,
@@ -32,6 +36,15 @@ type Receipt = {
   xpDelta: number;
   isPersonalBest: boolean;
   unlockedAchievements: string[];
+};
+
+const judgeErrorTitles: Record<JudgeErrorCode, string> = {
+  judge_unconfigured: "Judge setup needs attention.",
+  judge_in_progress: "Judgment is still running.",
+  judge_timeout: "Judgment timed out.",
+  judge_rate_limited: "The judge is catching its breath.",
+  judge_invalid_output: "Judgment could not be verified.",
+  judge_unavailable: "The judge is offline.",
 };
 
 function ResultView({
@@ -286,7 +299,8 @@ export function PracticeView({ scenario }: { scenario: Scenario }) {
     }
     return speaker === "you" ? "You" : scenario.persona.name;
   };
-  const personaError = attempt.error?.code.startsWith("persona_") ?? false;
+  const personaError =
+    Boolean(attempt.error) && !attempt.error?.code.startsWith("judge_");
   const canRetryError = attempt.error?.retryable !== false;
 
   return (
@@ -420,9 +434,14 @@ export function PracticeView({ scenario }: { scenario: Scenario }) {
                 <strong>
                   {personaError
                     ? "Reaction did not land."
-                    : "Judgment did not land."}
+                    : judgeErrorTitles[
+                        attempt.error?.code as JudgeErrorCode
+                      ] ?? "Judgment did not land."}
                 </strong>
                 <p>{attempt.error?.message}</p>
+                {!personaError && attempt.error && (
+                  <small>Error code: {attempt.error.code}</small>
+                )}
                 <span>
                   {personaError && canRetryError
                     ? "Your line is preserved. Retry the same turn or reset."

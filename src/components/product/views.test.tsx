@@ -7,6 +7,8 @@ import { OnboardingView } from "./OnboardingView";
 import { PracticeView } from "./PracticeView";
 import { LeaderboardView } from "./LeaderboardView";
 import { CurriculumView } from "./CurriculumView";
+import { ProgressView } from "./ProgressView";
+import { localDateKey } from "../../domain/activity";
 
 function withProvider(node: React.ReactNode) {
   return render(
@@ -83,6 +85,40 @@ describe("product view contracts", () => {
     expect(screen.getAllByRole("link", { name: /enter scenario/i })).toHaveLength(
       67,
     );
+  });
+
+  it("shows accessible local-date activity counts on progress", () => {
+    const today = localDateKey();
+    window.localStorage.setItem(
+      "rizzcode.v1.activity",
+      JSON.stringify([
+        {
+          attemptId: "activity-one",
+          scenarioId: "RC-001",
+          completedAt: new Date().toISOString(),
+          localDate: today,
+        },
+        {
+          attemptId: "activity-two",
+          scenarioId: "RC-002",
+          completedAt: new Date().toISOString(),
+          localDate: today,
+        },
+      ]),
+    );
+
+    withProvider(<ProgressView />);
+
+    expect(
+      screen.getByRole("heading", { name: "Build the reps." }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/2 completed practice attempts/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /activity calendar/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("2 completed reps shown")).toBeInTheDocument();
   });
 
   it("asks a guest to log in before opening a fourth new scenario", async () => {

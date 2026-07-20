@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ActivityContributionGraph,
   BrandBadge,
   BrandButton,
   BrandKicker,
@@ -9,6 +10,7 @@ import {
   BrandSurface,
   RizzMeter,
 } from "@/design-system";
+import { buildActivityCalendar } from "../domain/activity";
 import "./showcase.css";
 
 const colors = [
@@ -18,6 +20,18 @@ const colors = [
   ["Oxblood", "Brand signal", "var(--rc-color-oxblood)"],
   ["Lime", "Progress earned", "var(--rc-color-lime)"],
 ] as const;
+
+const activitySample = buildActivityCalendar(
+  [
+    {
+      attemptId: "brand-system-sample",
+      scenarioId: "RC-001",
+      completedAt: "2026-07-20T08:00:00.000Z",
+      localDate: "2026-07-20",
+    },
+  ],
+  { today: new Date(2026, 6, 20, 12), weekCount: 8 },
+);
 
 export function BrandSystemView() {
   return (
@@ -101,6 +115,14 @@ export function BrandSystemView() {
           <BrandSurface className="rc-showcase__component-card">
             <p className="rc-showcase__meter-label">Conversation calibration</p>
             <RizzMeter value={72} label="Conversation calibration at 72 percent" />
+          </BrandSurface>
+          <BrandSurface className="rc-showcase__component-card">
+            <p className="rc-showcase__meter-label">Practice activity</p>
+            <ActivityContributionGraph
+              weeks={activitySample.weeks}
+              total={activitySample.total}
+              ariaLabel="Example practice activity contribution graph"
+            />
           </BrandSurface>
           <BrandSurface className="rc-showcase__component-card" tone="ink">
             <BrandKicker>Next rep</BrandKicker>

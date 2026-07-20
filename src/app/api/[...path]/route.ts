@@ -262,7 +262,16 @@ export async function POST(
       canonicalAttempt,
       { userId },
     );
-    return json(result, result.ok ? 200 : result.retryable ? 503 : 409);
+    return json(
+      result,
+      result.ok
+        ? 200
+        : result.code === "judge_in_progress"
+          ? 409
+          : result.retryable
+            ? 503
+            : 409,
+    );
   }
 
   return json({ ok: false, message: "Not found." }, 404);
