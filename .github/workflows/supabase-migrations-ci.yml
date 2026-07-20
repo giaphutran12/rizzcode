@@ -121,8 +121,8 @@ jobs:
           drift=$(printf '%s\n' "$parsed" | awk -F'\t' -v allowed="$added_versions" '
             BEGIN {
               count = split(allowed, values, /\n/)
-              for (index = 1; index <= count; index++) {
-                if (values[index] != "") expected[values[index]] = 1
+              for (i = 1; i <= count; i++) {
+                if (values[i] != "") expected[values[i]] = 1
               }
             }
             {
