@@ -32,7 +32,7 @@ deployment, and drift alarm can all read them:
 - `SUPABASE_DB_PASSWORD`
 - `SUPABASE_PROJECT_REF`
 
-Create a protected GitHub Actions environment named `production`. The CD job targets
+Use the existing GitHub Actions environment named `Production`. The CD job targets
 that environment. If production requires a human approval gate, add required
 reviewers to it.
 
