@@ -11,6 +11,7 @@ import {
 import { BrandLogo } from "@/design-system";
 import { useRizzCode } from "../../context/RizzCodeContext";
 import { useAuth } from "../../context/AuthContext";
+import { useMythos } from "../../context/MythosContext";
 import "../../styles/product.css";
 
 export function ProductShell({
@@ -25,6 +26,7 @@ export function ProductShell({
 }>) {
   const { progress, storageWarning, dismissWarning } = useRizzCode();
   const auth = useAuth();
+  const mythos = useMythos();
 
   return (
     <main className="rizz-product">
@@ -53,10 +55,17 @@ export function ProductShell({
             <Trophy size={18} />
             <span>Ranks</span>
           </a>
-          <a href="/account">
-            <UserCircle size={18} />
-            <span>{auth.user ? "Account" : "Log in"}</span>
-          </a>
+          {!auth.user && mythos.session ? (
+            <span aria-label="Signed in through Mythos">
+              <UserCircle size={18} />
+              <span>{mythos.session.displayName}</span>
+            </span>
+          ) : (
+            <a href="/account">
+              <UserCircle size={18} />
+              <span>{auth.user ? "Account" : "Log in"}</span>
+            </a>
+          )}
         </nav>
         <div className="rizz-nav__stats" aria-label="Current progress">
           <span>

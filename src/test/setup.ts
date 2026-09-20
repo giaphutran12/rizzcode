@@ -29,11 +29,14 @@ class MemoryStorage implements Storage {
 }
 
 const testStorage = new MemoryStorage();
-Object.defineProperty(window, "localStorage", {
-  configurable: true,
-  value: testStorage,
-});
-Object.defineProperty(globalThis, "localStorage", {
-  configurable: true,
-  value: testStorage,
-});
+// Server-only suites opt into the node environment and have no window.
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: testStorage,
+  });
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: testStorage,
+  });
+}

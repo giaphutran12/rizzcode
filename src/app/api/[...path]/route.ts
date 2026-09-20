@@ -24,6 +24,8 @@ import {
   authenticatedUserForRequest,
   requestAuthenticatedUserId,
 } from "../../../../server/auth/verifyRequest";
+import { meterMythosUsage } from "../../../../server/mythos/meter";
+import { requestMythosSession } from "../../../../server/mythos/pass";
 import { billingStorageConfigured } from "../../../../server/billing/config";
 import {
   claimPracticeAccess,
@@ -114,7 +116,9 @@ export async function POST(
     if (path.length === 2 && !preparing) {
       return json({ ok: false, message: "Not found." }, 404);
     }
-    if (parsed.data.turn === 1) {
+    // A consumer launched from Mythos pays through the Mythos wallet, so the
+    // free-practice count and the Stripe gate do not apply to them.
+    if (parsed.data.turn === 1 && !requestMythosSession(request)) {
       const user = await authenticatedUserForRequest(request);
       if (user && billingStorageConfigured()) {
         try {
@@ -210,6 +214,10 @@ export async function POST(
         ...result,
         sessionToken: signConversationSession(updatedAttempt),
       };
+      await meterMythosUsage(request, "persona-turn", {
+        attemptId: result.attemptId,
+        turn: result.turn,
+      });
     }
     return json(publicResult, result.ok ? 200 : result.retryable ? 503 : 409);
   }
@@ -262,6 +270,11 @@ export async function POST(
       canonicalAttempt,
       { userId },
     );
+    if (result.ok) {
+      await meterMythosUsage(request, "judgment", {
+        attemptId: parsed.data.attemptId,
+      });
+    }
     return json(
       result,
       result.ok

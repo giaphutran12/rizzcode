@@ -14,6 +14,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BrandLogo } from "@/design-system";
 import { useRizzCode } from "../context/RizzCodeContext";
 import { useAuth } from "../context/AuthContext";
+import { useMythos } from "../context/MythosContext";
 import { nextPracticeScenario } from "../domain/progression";
 import { modules, scenarios } from "../data/scenarios";
 import "../styles/taste.css";
@@ -50,6 +51,7 @@ export function TasteExperience() {
   const [activeAccordion, setActiveAccordion] = useState(0);
   const { profile, progress } = useRizzCode();
   const auth = useAuth();
+  const mythos = useMythos();
   const featured = scenarios[1];
   const next = nextPracticeScenario(progress, profile);
   const nextHref =
@@ -91,7 +93,15 @@ export function TasteExperience() {
           <a href="/practice">Curriculum</a>
           <a href="/progress">Progress</a>
           <a href="/leaderboard">Leaderboard</a>
-          <a href="/account">{auth.user ? "Account" : "Log in"}</a>
+          {auth.user ? (
+            <a href="/account">Account</a>
+          ) : mythos.session ? (
+            <span aria-label="Signed in through Mythos">
+              {mythos.session.displayName}
+            </span>
+          ) : (
+            <a href="/account">Log in</a>
+          )}
         </nav>
         <a className="taste-nav__switch" href={nextHref}>
           {auth.user && profile.onboardingComplete ? "Next rep" : "Try a rep"}

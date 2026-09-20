@@ -5,6 +5,7 @@ import {
 } from "@phosphor-icons/react";
 import { useRizzCode } from "../../context/RizzCodeContext";
 import { useAuth } from "../../context/AuthContext";
+import { useMythos } from "../../context/MythosContext";
 import {
   completedScenarioCount,
   GUEST_SCENARIO_LIMIT,
@@ -25,11 +26,14 @@ export function CurriculumView({
 }) {
   const { profile, progress } = useRizzCode();
   const auth = useAuth();
+  const mythos = useMythos();
   const next = nextPracticeScenario(progress, profile);
   const completedCount = completedScenarioCount(progress);
   const guestLimitReached =
     !auth.loading &&
+    !mythos.loading &&
     !auth.user &&
+    !mythos.session &&
     completedCount >= GUEST_SCENARIO_LIMIT;
 
   return (
@@ -48,7 +52,7 @@ export function CurriculumView({
           {notice}
         </div>
       )}
-      {!auth.user && (
+      {!auth.user && !mythos.session && (
         <div className="rizz-inline-notice" role="status">
           <span>
             Try three exercises free. Log in when you are ready to keep going.

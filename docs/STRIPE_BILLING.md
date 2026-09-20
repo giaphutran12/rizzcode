@@ -135,3 +135,10 @@ subscribers remain on their original Price until they are deliberately migrated.
 
 The billing tables are server-only. Browser clients receive no direct grants,
 and the credit-claim function is executable only by the Supabase service role.
+
+## Mythos marketplace consumers
+
+A request carrying a valid Mythos pass (`x-rizzcode-mythos` header) skips the
+free-practice claim and the Stripe gate entirely; the consumer pays per turn
+and per judgment from their Mythos wallet instead. See
+[MYTHOS_INTEGRATION.md](MYTHOS_INTEGRATION.md).
