@@ -54,6 +54,9 @@ import { BrandButton, BrandLogo, RizzMeter } from "@/design-system";
   navigation
 - Guest reps, XP, attempts, profile, and milestones merge into the account on
   first login, then sync across signed-in devices
+- Mythos marketplace launches: a consumer opened from Mythos skips the guest
+  limit and login gate, and every persona turn and judgment is metered to
+  their Mythos wallet ([docs/MYTHOS_INTEGRATION.md](docs/MYTHOS_INTEGRATION.md))
 - Guest activity merges by attempt ID without double-counting; signed-in activity
   remains in a dedicated RLS-protected per-attempt ledger across devices
 - Transcript-bound judgment idempotency prevents duplicate provider calls and lets a

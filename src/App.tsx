@@ -18,6 +18,7 @@ import {
   ResetPasswordView,
 } from "./components/auth/AuthViews";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { MythosProvider, useMythos } from "./context/MythosContext";
 import { RizzCodeProvider, useRizzCode } from "./context/RizzCodeContext";
 import { getScenario } from "./data/scenarios";
 import { requiresLoginForScenario } from "./domain/guestAccess";
@@ -79,7 +80,12 @@ function Routes() {
   const searchParams = useSearchParams();
   const route = pathname.replace(/\/+$/, "") || "/";
   const auth = useAuth();
+  const mythos = useMythos();
   const { progress } = useRizzCode();
+  // A consumer launched from the Mythos marketplace is already signed in
+  // there, so the guest limit and the login gate never apply to them.
+  const identityLoading = auth.loading || mythos.loading;
+  const authenticated = Boolean(auth.user) || Boolean(mythos.session);
 
   if (route === "/auth/callback") return <AuthCallbackView />;
   if (route === "/auth/reset") return <ResetPasswordView />;
@@ -116,7 +122,7 @@ function Routes() {
     const scenario = scenarioId ? getScenario(scenarioId) : undefined;
     if (
       scenario &&
-      auth.loading &&
+      identityLoading &&
       requiresLoginForScenario(progress, scenario.id, false)
     ) {
       return (
@@ -127,8 +133,8 @@ function Routes() {
     }
     if (
       scenario &&
-      !auth.loading &&
-      requiresLoginForScenario(progress, scenario.id, Boolean(auth.user))
+      !identityLoading &&
+      requiresLoginForScenario(progress, scenario.id, authenticated)
     ) {
       return <LoginView returnTo={route} guestLimitReached />;
     }
@@ -157,10 +163,12 @@ function Routes() {
 
 export function App() {
   return (
-    <AuthProvider>
-      <RizzCodeProvider>
-        <Routes />
-      </RizzCodeProvider>
-    </AuthProvider>
+    <MythosProvider>
+      <AuthProvider>
+        <RizzCodeProvider>
+          <Routes />
+        </RizzCodeProvider>
+      </AuthProvider>
+    </MythosProvider>
   );
 }

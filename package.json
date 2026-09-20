@@ -15,15 +15,19 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:live-judge": "tsx server/judge/liveSmoke.ts",
-    "check": "tsc --noEmit && npm run check:brand && npm run check:migrations"
+    "check": "tsc --noEmit && npm run check:brand && npm run check:migrations",
+    "mythos:local": "node --import tsx scripts/mythos-local-api.mjs",
+    "test:mythos": "vitest run server/mythos src/lib/mythos.test.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.0",
     "@gsap/react": "^2.1.2",
+    "@mythos-work/sdk": "^0.0.7",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/supabase-js": "2.110.7",
     "ai": "^6.0.0",
     "dotenv": "^17.2.3",
+    "express": "^4.22.3",
     "gsap": "^3.13.0",
     "next": "16.2.10",
     "react": "19.2.7",
@@ -35,6 +39,7 @@
     "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
+    "@types/express": "^4.17.25",
     "@types/node": "^24.10.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
